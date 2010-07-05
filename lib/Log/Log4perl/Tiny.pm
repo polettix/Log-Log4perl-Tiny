@@ -4,12 +4,14 @@ our $VERSION = '0.1';
 
 use warnings;
 use strict;
+use Carp;
+use English qw( -no_match_vars );
 
 our ($ALL, $TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF);
 my ($_instance, %name_of);
 
 sub get_logger {
-   $_instance ||= bless {
+   return $_instance ||= bless {
       level    => $INFO,
       fh       => \*STDERR,
       preamble => sub {
@@ -21,7 +23,6 @@ sub get_logger {
       },
      },
      __PACKAGE__;
-   return $_instance;
 } ## end sub get_logger
 
 BEGIN {
@@ -30,6 +31,7 @@ BEGIN {
    for my $accessor (qw( level fh preamble )) {
       *{__PACKAGE__ . '::' . $accessor} = sub {
          my $self = shift;
+         $self = $_instance unless ref $self;
          $self->{$accessor} = shift if @_;
          return $self->{$accessor};
       };
@@ -52,22 +54,22 @@ sub import {
  ITEM:
    for my $item (@list) {
       next ITEM if $done{$item};
-      if ($item eq ':levels') {
+      $done{$item} = 1;
+      if ($item =~ /^[a-zA-Z]/mxs) {
+         *{$caller . '::' . $item} = \&{$exporter . '::' . $item};
+      }
+      elsif ($item eq ':levels') {
          for my $level (qw( ALL TRACE DEBUG INFO WARN ERROR FATAL OFF )) {
             *{$caller . '::' . $level} = \${$exporter . '::' . $level};
          }
       }
       elsif ($item eq ':subs') {
-         for my $subname (
+         push @list,
             qw(
             ALWAYS TRACE DEBUG INFO WARN ERROR FATAL
             LOGWARN LOGDIE LOGEXIT LOGCARP LOGCLUCK LOGCROAK LOGCONFESS
             get_logger
-            )
-           )
-         {
-            *{$caller . '::' . $subname} = \&{$exporter . '::' . $subname};
-         } ## end for my $subname (qw(...
+            );
       } ## end elsif ($item eq ':subs')
       elsif ($item =~ /\A : (mimic | mask | fake) \z/mxs) {
          $INC{'Log/Log4perl.pm'} = __FILE__;
@@ -76,6 +78,11 @@ sub import {
             my ($pack, $conf) = @_;
             if (ref $conf) {
                $_instance->level($conf->{level}) if exists $conf->{level};
+               if (exists $conf->{file}) {
+                  open my $fh, $conf->{file}
+                     or croak "open('$conf->{file}'): $OS_ERROR";
+                  $_instance->fh($fh);
+               }
             }
             elsif (defined $conf) {
                $_instance->level($conf);
@@ -94,17 +101,32 @@ sub log {
    my $self  = shift;
    my $level = shift;
    return if $level > $self->{level};
-   print {$self->{fh}} $self->{preamble}->(), @_, "\n";
+   print {$self->{fh}} $self->{preamble}->($level), @_, "\n";
    return;
 } ## end sub log
 
+BEGIN {
+   no strict 'refs';
+
+   for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE )) {
+      *{__PACKAGE__ . '::' . lc($name)} = sub {
+         my $self = shift;
+         return $self->log($$name, @_);
+      };
+   }
+
+   for my $name (qw(
+      FATAL ERROR WARN INFO DEBUG TRACE
+      LOGWARN LOGDIE LOGEXIT
+      LOGCARP LOGCLUCK LOGCROAK LOGCONFESS
+      )) {
+      *{__PACKAGE__ . '::' . $name} = sub {
+         $_instance->can(lc $name)->($_instance, @_);
+      }
+   }
+} ## end BEGIN
+
 sub ALWAYS { return $_instance->log($OFF,   @_); }
-sub TRACE  { return $_instance->log($TRACE, @_); }
-sub DEBUG  { return $_instance->log($DEBUG, @_); }
-sub INFO   { return $_instance->log($INFO,  @_); }
-sub WARN   { return $_instance->log($WARN,  @_); }
-sub ERROR  { return $_instance->log($ERROR, @_); }
-sub FATAL  { return $_instance->log($FATAL, @_); }
 
 sub _exit {
    my $self = shift || $_instance;
@@ -112,43 +134,50 @@ sub _exit {
    exit 1;
 }
 
-sub LOGWARN {
-   WARN(@_);
+sub logwarn {
+   my $self = shift;
+   $self->warn(@_);
    CORE::warn(@_);
-   _exit();
+   $self->_exit();
 }
 
-sub LOGDIE {
-   FATAL(@_);
+sub logdie {
+   my $self = shift;
+   $self->fatal(@_);
    CORE::die(@_);
-   _exit();
+   $self->_exit();
 }
 
-sub LOGEXIT {
-   FATAL(@_);
-   _exit();
+sub logexit {
+   my $self = shift;
+   $self->fatal(@_);
+   $self->_exit();
 }
 
-sub LOGCARP {
-   WARN(@_);
+sub logcarp {
+   my $self = shift;
+   $self->warn(@_);
    require Carp;
    Carp::carp(@_);
 }
 
-sub LOGCLUCK {
-   WARN(@_);
+sub logcluck {
+   my $self = shift;
+   $self->warn(@_);
    require Carp;
    Carp::cluck(@_);
 }
 
-sub LOGCROAK {
-   FATAL(@_);
+sub logcroak {
+   my $self = shift;
+   $self->fatal(@_);
    require Carp;
    Carp::croak(@_);
 }
 
-sub LOGCONFESS {
-   FATAL(@_);
+sub logconfess {
+   my $self = shift;
+   $self->fatal(@_);
    require Carp;
    Carp::confess(@_);
 }
