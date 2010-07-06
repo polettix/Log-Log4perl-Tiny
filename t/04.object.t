@@ -20,7 +20,7 @@ sub _execute {
    # Deviate STDERR to a local string, execute and free STDERR
    close STDERR;
    open STDERR, '>', \my $stderr;
-   $sub->();
+   eval { $sub->() } or do {print {*STDERR} $@ };
    close STDERR;
 
    # Restore previous STDERR
