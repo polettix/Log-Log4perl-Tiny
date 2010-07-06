@@ -4,51 +4,24 @@ our $VERSION = '0.1';
 
 use warnings;
 use strict;
-use Carp;
-use English qw( -no_match_vars );
 
 our ($ALL, $TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF);
-my ($_instance, %name_of);
-
-sub get_logger {
-   return $_instance ||= bless {
-      level    => $INFO,
-      fh       => \*STDERR,
-      preamble => sub {
-         my ($level) = @_;
-         my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
-           localtime();
-         return sprintf '[%04d-%02d-%02d %02d:%02d:%02d] %5s ', $year + 1900,
-           $mon + 1, $mday, $hour, $min, $sec, $name_of{$level};
-      },
-     },
-     __PACKAGE__;
-} ## end sub get_logger
-
-BEGIN {
-   no strict 'refs';
-
-   for my $accessor (qw( level fh preamble )) {
-      *{__PACKAGE__ . '::' . $accessor} = sub {
-         my $self = shift;
-         $self = $_instance unless ref $self;
-         $self->{$accessor} = shift if @_;
-         return $self->{$accessor};
-      };
-   } ## end for my $accessor (qw( level fh preamble ))
-
-   my $index = 0;
-   for my $name (qw( OFF FATAL ERROR WARN INFO DEBUG TRACE ALL )) {
-      $name_of{$$name = $index++} = $name;
-   }
-
-   get_logger();    # inizialises $_instance;
-} ## end BEGIN
+my ($_instance, %name_of, %format_for);
 
 sub import {
    my ($exporter, @list) = @_;
    my ($caller, $file, $line) = caller();
    no strict 'refs';
+
+   if (grep { $_ eq ':full_or_fake' } @list) {
+      @list = grep { $_ ne ':full_or_fake' } @list;
+      eval "
+         package $caller;
+         use Log::Log4perl (\@list);
+         1;
+      " and return;
+      unshift @list, ':fake';
+   } ## end if (grep { $_ eq ':full_or_fake'...
 
    my %done;
  ITEM:
@@ -64,26 +37,25 @@ sub import {
          }
       }
       elsif ($item eq ':subs') {
-         push @list,
-            qw(
-            ALWAYS TRACE DEBUG INFO WARN ERROR FATAL
-            LOGWARN LOGDIE LOGEXIT LOGCARP LOGCLUCK LOGCROAK LOGCONFESS
-            get_logger
-            );
+         push @list, qw(
+           ALWAYS TRACE DEBUG INFO WARN ERROR FATAL
+           LOGWARN LOGDIE LOGEXIT LOGCARP LOGCLUCK LOGCROAK LOGCONFESS
+           get_logger
+         );
       } ## end elsif ($item eq ':subs')
       elsif ($item =~ /\A : (mimic | mask | fake) \z/mxs) {
          $INC{'Log/Log4perl.pm'} = __FILE__;
          *Log::Log4perl::import = sub { };
          *Log::Log4perl::easy_init = sub {
             my ($pack, $conf) = @_;
+            $_instance = __PACKAGE__->new($conf) if ref $conf;
             if (ref $conf) {
                $_instance->level($conf->{level}) if exists $conf->{level};
-               if (exists $conf->{file}) {
-                  open my $fh, $conf->{file}
-                     or croak "open('$conf->{file}'): $OS_ERROR";
-                  $_instance->fh($fh);
-               }
-            }
+               $_instance->format($conf->{format})
+                 if exists $conf->{format};
+               $_instance->format($conf->{layout})
+                 if exists $conf->{layout};
+            } ## end if (ref $conf)
             elsif (defined $conf) {
                $_instance->level($conf);
             }
@@ -97,36 +69,84 @@ sub import {
    return;
 } ## end sub import
 
+sub new {
+   my $package = shift;
+   my %args = ref($_[0]) ? %{$_[0]} : @_;
+
+   $args{format} = $args{layout} if exists $args{layout};
+
+   if (exists $args{file}) {
+      open my $fh, $args{file}
+        or die "open('$args{file}'): $!";
+      $args{fh} = $fh;
+   }
+
+   my $self = bless {
+      fh    => \*STDERR,
+      level => $INFO,
+   }, $package;
+
+   for my $accessor (qw( level fh format )) {
+      next unless defined $args{$accessor};
+      $self->$accessor($args{$accessor});
+   }
+
+   $self->format('[%d] [%5p] %m%n') unless exists $self->{format};
+
+   return $self;
+} ## end sub new
+
+sub get_logger {
+   return $_instance ||= __PACKAGE__->new();
+}
+
+sub format {
+   my $self = shift;
+
+   if (@_) {
+      $self->{format} = shift;
+      $self->{args}   = [];
+
+      $self->{args} = \my @args;
+      my $replace = sub {
+         my ($num, $op) = @_;
+         return '%%' if $op eq '%';
+         return "%%$op" unless defined $format_for{$op};
+         push @args, $op;
+         return "%$num$format_for{$op}[0]";
+      };
+
+      # transform into real format
+      my $format_chars = join '', keys %format_for;
+      $self->{format} =~ s{
+            %                      # format marker
+            ( -? \d* (?:\.\d+)? )  # number
+            ([$format_chars])      # specifier
+         }
+         {
+            $replace->($1, $2);
+         }gsmex;
+   } ## end if (@_)
+   return $self->{format};
+} ## end sub format
+
 sub log {
-   my $self  = shift;
+   my $self = shift;
+
    my $level = shift;
    return if $level > $self->{level};
-   print {$self->{fh}} $self->{preamble}->($level), @_, "\n";
+
+   my %data_for = (
+      level   => $level,
+      message => \@_,
+   );
+   printf {$self->{fh}} $self->{format},
+     map { $format_for{$_}[1]->(\%data_for); } @{$self->{args}};
+
    return;
 } ## end sub log
 
-BEGIN {
-   no strict 'refs';
-
-   for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE )) {
-      *{__PACKAGE__ . '::' . lc($name)} = sub {
-         my $self = shift;
-         return $self->log($$name, @_);
-      };
-   }
-
-   for my $name (qw(
-      FATAL ERROR WARN INFO DEBUG TRACE
-      LOGWARN LOGDIE LOGEXIT
-      LOGCARP LOGCLUCK LOGCROAK LOGCONFESS
-      )) {
-      *{__PACKAGE__ . '::' . $name} = sub {
-         $_instance->can(lc $name)->($_instance, @_);
-      }
-   }
-} ## end BEGIN
-
-sub ALWAYS { return $_instance->log($OFF,   @_); }
+sub ALWAYS { return $_instance->log($OFF, @_); }
 
 sub _exit {
    my $self = shift || $_instance;
@@ -139,14 +159,14 @@ sub logwarn {
    $self->warn(@_);
    CORE::warn(@_);
    $self->_exit();
-}
+} ## end sub logwarn
 
 sub logdie {
    my $self = shift;
    $self->fatal(@_);
    CORE::die(@_);
    $self->_exit();
-}
+} ## end sub logdie
 
 sub logexit {
    my $self = shift;
@@ -159,30 +179,121 @@ sub logcarp {
    $self->warn(@_);
    require Carp;
    Carp::carp(@_);
-}
+} ## end sub logcarp
 
 sub logcluck {
    my $self = shift;
    $self->warn(@_);
    require Carp;
    Carp::cluck(@_);
-}
+} ## end sub logcluck
 
 sub logcroak {
    my $self = shift;
    $self->fatal(@_);
    require Carp;
    Carp::croak(@_);
-}
+} ## end sub logcroak
 
 sub logconfess {
    my $self = shift;
    $self->fatal(@_);
    require Carp;
    Carp::confess(@_);
-}
+} ## end sub logconfess
 
-1;    # Magic true value required at end of module
+BEGIN {
+
+   # %format_for idea from Log::Tiny by J. M. Adler
+   my $last_log = $^T;
+   %format_for = (    # specifiers according to Log::Log4perl
+      c => [s => sub { 'main' }],
+      C => [s => sub { (caller(4))[0] },],
+      d => [
+         s => sub {
+            my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday,
+               $isdst) = localtime();
+            sprintf '%04d/%02d/%02d %02d:%02d:%02d',
+              $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
+           }
+      ],
+      F => [s => sub { (caller(3))[1] },],
+      H => [
+         s => sub {
+            eval { require Sys::Hostname; Sys::Hostname::hostname() }
+              || '';
+           }
+      ],
+      l => [
+         s => sub {
+            my (undef, undef, undef, $subroutine) = caller(4);
+            my (undef, $filename, $line) = caller(3);
+            sprintf '%s %s (%d)', $subroutine, $filename, $line;
+           }
+      ],
+      L => [d => sub { (caller(3))[2] },],
+      m =>
+        [s => sub { join((defined $, ? $, : ''), @{shift->{message}}) },],
+      M => [s => sub { (caller(4))[3] },],
+      n => [s => sub { $/ },],
+      p => [s => sub { $name_of{shift->{level}} },],
+      P => [d => sub { $$ },],
+      r => [d => sub { time - $^T },],
+      R => [d => sub { my $l = $last_log; ($last_log = time) - $l; },],
+      T => [
+         s => sub {
+            my $level = 4;
+            my @chunks;
+            while (my @caller = caller($level++)) {
+               push @chunks,
+                 "$caller[3]() called at $caller[1] line $caller[2]";
+            }
+            join ', ', @chunks;
+         },
+      ],
+   );
+
+   # From now on we're going to play with GLOBs...
+   no strict 'refs';
+
+   for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE )) {
+      *{__PACKAGE__ . '::' . lc($name)} = sub {
+         my $self = shift;
+         return $self->log($$name, @_);
+      };
+   } ## end for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE ))
+
+   for my $name (
+      qw(
+      FATAL ERROR WARN INFO DEBUG TRACE
+      LOGWARN LOGDIE LOGEXIT
+      LOGCARP LOGCLUCK LOGCROAK LOGCONFESS
+      )
+     )
+   {
+      *{__PACKAGE__ . '::' . $name} = sub {
+         $_instance->can(lc $name)->($_instance, @_);
+      };
+   } ## end for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE...
+
+   for my $accessor (qw( level fh )) {
+      *{__PACKAGE__ . '::' . $accessor} = sub {
+         my $self = shift;
+         $self = $_instance unless ref $self;
+         $self->{$accessor} = shift if @_;
+         return $self->{$accessor};
+      };
+   } ## end for my $accessor (qw( level fh ))
+
+   my $index = 0;
+   for my $name (qw( OFF FATAL ERROR WARN INFO DEBUG TRACE ALL )) {
+      $name_of{$$name = $index++} = $name;
+   }
+
+   get_logger();    # initialises $_instance;
+} ## end BEGIN
+
+1;                  # Magic true value required at end of module
 __END__
 
 =head1 NAME
