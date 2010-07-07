@@ -7,7 +7,7 @@ use Test::More 'no_plan';
 use Log::Log4perl::Tiny qw( :levels );
 
 use lib 't';
-use LLT qw( set_logger log_is log_like );
+use TestLLT qw( set_logger log_is log_like );
 
 my $logger = Log::Log4perl::Tiny::get_logger();
 ok($logger, 'got a logger instance');
@@ -24,18 +24,18 @@ my @tests = (
    ['%c', [ 'whatever' ], 'main' ],
    ['%C', [ 'whatever' ], 'main' ],
    ['%d', [ 'whatever' ], qr{\A\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\z} ],
-   ['%F', [ 'whatever' ], 't/LLT.pm' ],
+   ['%F', [ 'whatever' ], 't/TestLLT.pm' ],
    ['%H', [ 'whatever' ], $hostname ],
-   ['%l', [ 'whatever' ], qr{\Amain::log_like t/LLT\.pm \(\d+\)\z} ],
+   ['%l', [ 'whatever' ], qr{\ATestLLT::log_like t/TestLLT\.pm \(\d+\)\z} ],
    ['%L', [ 'whatever' ], qr{\A\d+\z} ],
    ['%m', [qw( frozz buzz )], 'frozzbuzz'],
-   ['%M', [ 'whatever' ], 'main::log_is'],
+   ['%M', [ 'whatever' ], 'TestLLT::log_is'],
    ['%n', [ 'whatever' ], "\n" ],
    ['%p', [ 'whatever' ], 'INFO' ],
    ['%P', [ 'whatever' ], $$ ],
    ['%r', [ 'whatever' ], qr{\A\d+\z} ],
    ['%R', [ 'whatever' ], qr{\A\d+\z} ],
-   ['%T', [ 'whatever' ], qr{\Amain::log_like\(\) called at t/\d+\..*?\.t line \d+} ],
+   ['%T', [ 'whatever' ], qr{\ATestLLT::log_like\(\) called at t/\d+\..*?\.t line \d+} ],
    ['%m%n', [qw( foo bar )],    "foobar$/"],
    ['[%d] [%-5p] %m%n', [ 'whatever', 'you', 'like' ], 
       qr{\A\[\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\] \[INFO \] whateveryoulike\n\z}],

@@ -7,7 +7,7 @@ use Test::More 'no_plan';
 use Log::Log4perl::Tiny qw( :levels );
 
 use lib 't';
-use LLT qw( set_logger log_is );
+use TestLLT qw( set_logger log_is );
 
 my $logger = Log::Log4perl::Tiny::get_logger();
 ok($logger, 'got a logger instance');
