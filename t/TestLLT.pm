@@ -1,7 +1,4 @@
-# vim: filetype=perl :
-use strict;
-use warnings;
-
+package TestLLT;
 use base 'Exporter';
 our @EXPORT = qw( set_logger log_is log_like );
 
@@ -12,13 +9,13 @@ my $logger;
 sub set_logger { $logger = shift }
 
 sub log_is (&$$) {
-   my ($sub, $regex, $message) = @_;
+   my ($sub, $value, $message) = @_;
    my $collector = '';
    open my $fh, '>', \$collector;
    $logger->fh($fh);
    $sub->($logger);
    close $fh;
-   is($collector, $regex, $message);
+   $Test->is_eq($collector, $value, $message);
 } ## end sub log_is (&$$)
 
 sub log_like (&$$) {
@@ -28,7 +25,7 @@ sub log_like (&$$) {
    $logger->fh($fh);
    $sub->($logger);
    close $fh;
-   like($collector, $regex, $message);
+   $Test->like($collector, $regex, $message);
 } ## end sub log_like (&$$)
 
 1;
