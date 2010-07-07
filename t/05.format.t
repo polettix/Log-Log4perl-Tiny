@@ -18,7 +18,7 @@ set_logger($logger);
 my $hostname = eval {
    require Sys::Hostname;
    Sys::Hostname::hostname();
-} or '';
+} || '';
 
 my @tests = (
    ['%c', [ 'whatever' ], 'main' ],
