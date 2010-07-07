@@ -21,24 +21,30 @@ my $hostname = eval {
 } || '';
 
 my @tests = (
-   ['%c', [ 'whatever' ], 'main' ],
-   ['%C', [ 'whatever' ], 'main' ],
-   ['%d', [ 'whatever' ], qr{\A\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\z} ],
-   ['%F', [ 'whatever' ], 't/TestLLT.pm' ],
-   ['%H', [ 'whatever' ], $hostname ],
-   ['%l', [ 'whatever' ], qr{\ATestLLT::log_like t/TestLLT\.pm \(\d+\)\z} ],
-   ['%L', [ 'whatever' ], qr{\A\d+\z} ],
+   ['%c', ['whatever'], 'main'],
+   ['%C', ['whatever'], 'main'],
+   ['%d', ['whatever'], qr{\A\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\z}],
+   ['%F', ['whatever'], 't/TestLLT.pm'],
+   ['%H', ['whatever'], $hostname],
+   ['%l', ['whatever'], qr{\ATestLLT::log_like t/TestLLT\.pm \(\d+\)\z}],
+   ['%L', ['whatever'], qr{\A\d+\z}],
    ['%m', [qw( frozz buzz )], 'frozzbuzz'],
-   ['%M', [ 'whatever' ], 'TestLLT::log_is'],
-   ['%n', [ 'whatever' ], "\n" ],
-   ['%p', [ 'whatever' ], 'INFO' ],
-   ['%P', [ 'whatever' ], $$ ],
-   ['%r', [ 'whatever' ], qr{\A\d+\z} ],
-   ['%R', [ 'whatever' ], qr{\A\d+\z} ],
-   ['%T', [ 'whatever' ], qr{\ATestLLT::log_like\(\) called at t/\d+\..*?\.t line \d+} ],
-   ['%m%n', [qw( foo bar )],    "foobar$/"],
-   ['[%d] [%-5p] %m%n', [ 'whatever', 'you', 'like' ], 
-      qr{\A\[\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\] \[INFO \] whateveryoulike\n\z}],
+   ['%M', ['whatever'], 'TestLLT::log_is'],
+   ['%n', ['whatever'], "\n"],
+   ['%p', ['whatever'], 'INFO'],
+   ['%P', ['whatever'], $$],
+   ['%r', ['whatever'], qr{\A\d+\z}],
+   ['%R', ['whatever'], qr{\A\d+\z}],
+   [
+      '%T', ['whatever'],
+      qr{\ATestLLT::log_like\(\) called at t/\d+\..*?\.t line \d+}
+   ],
+   ['%m%n', [qw( foo bar )], "foobar$/"],
+   [
+      '[%d] [%-5p] %m%n',
+      ['whatever', 'you', 'like'],
+qr{\A\[\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\] \[INFO \] whateveryoulike\n\z}
+   ],
 );
 
 for my $test (@tests) {

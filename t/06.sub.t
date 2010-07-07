@@ -16,4 +16,5 @@ $logger->format('%m');
 set_logger($logger);
 log_is {
    $logger->info('scalar', sub { 'subroutine' }, '---', sub { 13 * 17 });
-} 'scalarsubroutine---221', 'mixed subroutine and scalars';
+}
+'scalarsubroutine---221', 'mixed subroutine and scalars';
