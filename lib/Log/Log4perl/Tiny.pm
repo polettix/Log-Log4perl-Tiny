@@ -232,8 +232,14 @@ BEGIN {
            }
       ],
       L => [d => sub { (caller(3))[2] },],
-      m =>
-        [s => sub { join((defined $, ? $, : ''), @{shift->{message}}) },],
+      m => [
+         s => sub {
+            join(
+               (defined $, ? $, : ''),
+               map { ref($_) eq 'CODE' ? $_->() : $_; } @{shift->{message}}
+            );
+         },
+      ],
       M => [s => sub { (caller(4))[3] },],
       n => [s => sub { $/ },],
       p => [s => sub { $name_of{shift->{level}} },],
