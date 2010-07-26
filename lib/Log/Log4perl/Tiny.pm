@@ -44,24 +44,25 @@ sub import {
          );
       } ## end elsif ($item eq ':subs')
       elsif ($item =~ /\A : (mimic | mask | fake) \z/mxs) {
-         if (! Log::Log4perl->can('easy_init')) {
+         if (!Log::Log4perl->can('easy_init')) {
             $INC{'Log/Log4perl.pm'} = __FILE__;
             *Log::Log4perl::import = sub { };
             *Log::Log4perl::easy_init = sub {
                my ($pack, $conf) = @_;
                $_instance = __PACKAGE__->new($conf) if ref $conf;
                if (ref $conf) {
-                  $_instance->level($conf->{level}) if exists $conf->{level};
+                  $_instance->level($conf->{level})
+                    if exists $conf->{level};
                   $_instance->format($conf->{format})
-                  if exists $conf->{format};
+                    if exists $conf->{format};
                   $_instance->format($conf->{layout})
-                  if exists $conf->{layout};
+                    if exists $conf->{layout};
                } ## end if (ref $conf)
                elsif (defined $conf) {
                   $_instance->level($conf);
                }
             };
-         }
+         } ## end if (!Log::Log4perl->can...
       } ## end elsif ($item =~ /\A : (mimic | mask | fake) \z/mxs)
       elsif ($item eq ':easy') {
          push @list, qw( :levels :subs :fake );
@@ -87,7 +88,7 @@ sub new {
       select($previous);
 
       $args{fh} = $fh;
-   }
+   } ## end if (exists $args{file})
 
    my $self = bless {
       fh    => \*STDERR,
@@ -160,9 +161,10 @@ sub ALWAYS { return $_instance->log($OFF, @_); }
 sub _exit {
    my $self = shift || $_instance;
    exit $self->{logexit_code} if defined $self->{logexit_code};
-   exit $Log::Log4perl::LOGEXIT_CODE if defined $Log::Log4perl::LOGEXIT_CODE;
+   exit $Log::Log4perl::LOGEXIT_CODE
+     if defined $Log::Log4perl::LOGEXIT_CODE;
    exit 1;
-}
+} ## end sub _exit
 
 sub logwarn {
    my $self = shift;
@@ -299,7 +301,7 @@ BEGIN {
          $self->{$accessor} = shift if @_;
          return $self->{$accessor};
       };
-   } ## end for my $accessor (qw( level fh ))
+   } ## end for my $accessor (qw( level fh logexit_code ))
 
    my $index = 0;
    for my $name (qw( OFF FATAL ERROR WARN INFO DEBUG TRACE ALL )) {
