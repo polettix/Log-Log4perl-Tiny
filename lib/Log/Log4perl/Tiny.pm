@@ -15,9 +15,10 @@ sub import {
 
    if (grep { $_ eq ':full_or_fake' } @list) {
       @list = grep { $_ ne ':full_or_fake' } @list;
+      my $sue = 'use Log::Log4perl (@list)';
       eval "
          package $caller;
-         use Log::Log4perl (\@list);
+         $sue;
          1;
       " and return;
       unshift @list, ':fake';
@@ -44,7 +45,9 @@ sub import {
          );
       } ## end elsif ($item eq ':subs')
       elsif ($item =~ /\A : (mimic | mask | fake) \z/mxs) {
-         if (!Log::Log4perl->can('easy_init')) {
+
+         # module name as a string below to trick Module::ScanDeps
+         if (!'Log::Log4perl'->can('easy_init')) {
             $INC{'Log/Log4perl.pm'} = __FILE__;
             *Log::Log4perl::import = sub { };
             *Log::Log4perl::easy_init = sub {
