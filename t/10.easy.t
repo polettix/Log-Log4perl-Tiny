@@ -37,7 +37,7 @@ ok($logger, 'got a logger instance');
 
 $logger->level($Log::Log4perl::Tiny::DEBUG);
 
-use Log::Log4perl qw( :easy_init );    # should be a no-op
+use Log::Log4perl qw( :easy );    # should be a no-op
 Log::Log4perl->easy_init($Log::Log4perl::Tiny::ERROR);
 
 is($logger->level(), $Log::Log4perl::Tiny::ERROR, 'easy_init');

@@ -17,7 +17,7 @@ is($logger, $real_logger, 'get_logger() works as expected');
 
 $logger->level($Log::Log4perl::Tiny::DEBUG);
 
-use Log::Log4perl qw( :easy_init );    # should be a no-op
+use Log::Log4perl qw( :easy );    # should be a no-op
 Log::Log4perl->easy_init($Log::Log4perl::Tiny::ERROR);
 
 $logger = get_logger();

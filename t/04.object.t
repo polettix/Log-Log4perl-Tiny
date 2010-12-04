@@ -6,7 +6,6 @@ use Test::More tests => 37;    # last test to print
 
 #use Test::More 'no_plan';
 use Log::Log4perl::Tiny qw( :levels );
-use Test::Warn;
 
 use lib 't';
 use TestLLT qw( set_logger log_is log_like );
