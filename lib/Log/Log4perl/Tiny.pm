@@ -415,7 +415,7 @@ possible.
 =head2 Log Levels
 
 L<Log::Log4perl::Tiny> implements all I<standard> L<Log::Log4perl>'s
-log levels, without the possibility to change them. The corrispondent
+log levels, without the possibility to change them. The correspondent
 values are available in the following variables (in order of increasing
 severity or I<importance>):
 
@@ -599,7 +599,7 @@ emit log at C<FATAL> level and then call C<Carp::confess()>;
 =back
 
 If you want to set the exit code for C<LOGWARN> and C<LOGEXIT> above
-(and L<LOGDIE> as well, in case c<die()> does not exit by itself),
+(and L<LOGDIE> as well, in case C<die()> does not exit by itself),
 you can go "the L<Log::Log4perl> way" and set
 C<$Log::Log4perl::LOGEXIT_CODE>, or set a code with
 C<logexit_code()> - but you have to wait to read something about the
@@ -616,7 +616,7 @@ compatible with Log::Log4perl, anyway, you should rather do the following:
 
 To emit a log, you can call any of the stealth logger functions or any
 of the corresponding log methods. All the parameters that you pass are
-sent to the output stream as the are, except code references that are
+sent to the output stream as they are, except code references that are
 first evaluated. This lets you embed costly evaluations (e.g. generate
 heavy dumps of variabls) inside subroutines, and avoid the cost
 of evaluation in case the log is filtered out:
@@ -657,7 +657,7 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
 
 Notably, both C<%x> (NDC) and C<%X> (MDC) are missing. Moreover, the
 extended specifier feature with additional info in braces (like
-C<%d{HH:mm}> is missing, i.e. the structure of each specifier above
+C<%d{HH:mm}>) is missing, i.e. the structure of each specifier above
 is fixed. (Thanks to C<Log::Tiny> for the cool trick of how to handle
 the C<printf>-like string, which is probably mutuated from
 C<Log::Log4perl> itself according to the comments).
