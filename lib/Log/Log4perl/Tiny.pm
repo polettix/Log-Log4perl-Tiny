@@ -6,7 +6,7 @@ use warnings;
 use strict;
 
 our ($ALL, $TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF);
-my ($_instance, %name_of, %format_for);
+my ($_instance, %name_of, %format_for, %id_for);
 
 sub import {
    my ($exporter, @list) = @_;
@@ -297,7 +297,7 @@ BEGIN {
       };
    } ## end for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE...
 
-   for my $accessor (qw( level fh logexit_code )) {
+   for my $accessor (qw( fh logexit_code )) {
       *{__PACKAGE__ . '::' . $accessor} = sub {
          my $self = shift;
          $self = $_instance unless ref $self;
@@ -308,11 +308,25 @@ BEGIN {
 
    my $index = 0;
    for my $name (qw( OFF FATAL ERROR WARN INFO DEBUG TRACE ALL )) {
-      $name_of{$$name = $index++} = $name;
+      $name_of{$$name = $index} = $name;
+      $id_for{$name} = $index;
+      $id_for{$index} = $index;
+      ++$index;
    }
 
    get_logger();    # initialises $_instance;
 } ## end BEGIN
+
+sub level {
+   my $self = shift;
+   $self = $_instance unless ref $self;
+   if (@_) {
+      my $level = shift;
+      return unless exists $id_for{$level};
+      $self->{level} = $id_for{$level};
+   }
+   return $self->{level};
+}
 
 1;                  # Magic true value required at end of module
 __END__
