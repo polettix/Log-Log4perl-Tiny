@@ -1,4 +1,7 @@
 {{$NEXT}}
+   - release
+
+0.1.0_3   2010-12-06 07:41:47 Europe/Rome
    - set minimum perl version to 5.8.0
 
 0.1.0_2   2010-12-05 00:10:16 Europe/Rome
