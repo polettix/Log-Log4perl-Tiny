@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.0.1_01  2011-07-06 18:51:51 Europe/Rome
    - added a $DEAD log level to disable all logging
    - set default logging level to $DEAD
    - added backwards compatibility option :default_to_INFO
