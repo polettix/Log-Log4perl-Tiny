@@ -1,4 +1,9 @@
 {{$NEXT}}
+   - added a $DEAD log level to disable all logging
+   - set default logging level to $DEAD
+   - added backwards compatibility option :default_to_INFO
+   - added support for sub references as filehandles
+   - added and fixed documentation
 
 1.0.0     2011-01-22 22:35:38 Europe/Rome
    - release

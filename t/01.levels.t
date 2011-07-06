@@ -7,7 +7,7 @@ use Test::More tests => 24;    # last test to print
 use Log::Log4perl::Tiny qw( :levels );
 
 LEVEL:
-for my $level (qw( ALL TRACE DEBUG INFO WARN ERROR FATAL OFF )) {
+for my $level (qw( TRACE DEBUG INFO WARN ERROR FATAL OFF DEAD )) {
    no strict 'refs';
    my $glob = $main::{$level};
    if (!ok($glob, "'$level', symbol table entry exists")) {

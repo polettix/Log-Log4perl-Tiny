@@ -4,8 +4,8 @@ package Log::Log4perl::Tiny;
 use warnings;
 use strict;
 
-our ($ALL, $TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF);
-my ($_instance, %name_of, %format_for, %id_for);
+our ($TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF, $DEAD);
+my ($_instance, %name_of, %format_for, %id_for, $default_level);
 
 sub import {
    my ($exporter, @list) = @_;
@@ -32,7 +32,7 @@ sub import {
          *{$caller . '::' . $item} = \&{$exporter . '::' . $item};
       }
       elsif ($item eq ':levels') {
-         for my $level (qw( ALL TRACE DEBUG INFO WARN ERROR FATAL OFF )) {
+         for my $level (qw( TRACE DEBUG INFO WARN ERROR FATAL OFF DEAD )) {
             *{$caller . '::' . $level} = \${$exporter . '::' . $level};
          }
       }
@@ -51,8 +51,8 @@ sub import {
             *Log::Log4perl::import = sub { };
             *Log::Log4perl::easy_init = sub {
                my ($pack, $conf) = @_;
-               $_instance = __PACKAGE__->new($conf) if ref $conf;
                if (ref $conf) {
+                  $_instance = __PACKAGE__->new($conf);
                   $_instance->level($conf->{level})
                     if exists $conf->{level};
                   $_instance->format($conf->{format})
@@ -69,10 +69,24 @@ sub import {
       elsif ($item eq ':easy') {
          push @list, qw( :levels :subs :fake );
       }
+      elsif ($item eq ':default_to_INFO') {
+         $default_level = $INFO;
+         get_logger()->_reset_default_level();
+      }
    } ## end for my $item (@list)
 
    return;
 } ## end sub import
+
+sub _reset_default_level {
+   my ($self, $do_reset) = @_;
+   $self->{_level_set_from_default} = 1 if $do_reset;
+   if ($self->{_level_set_from_default}) {
+      $self->level($default_level);
+      $self->{_level_set_from_default} = 1;
+   }
+   return;
+}
 
 sub new {
    my $package = shift;
@@ -94,8 +108,8 @@ sub new {
 
    my $self = bless {
       fh    => \*STDERR,
-      level => $INFO,
    }, $package;
+   $self->_reset_default_level('force reset');
 
    for my $accessor (qw( level fh format )) {
       next unless defined $args{$accessor};
@@ -144,6 +158,7 @@ sub format {
 
 sub log {
    my $self = shift;
+   return if $self->{level} == $DEAD;
 
    my $level = shift;
    return if $level > $self->{level};
@@ -152,8 +167,11 @@ sub log {
       level   => $level,
       message => \@_,
    );
-   printf {$self->{fh}} $self->{format},
+   my $message = sprintf $self->{format},
      map { $format_for{$_}[1]->(\%data_for); } @{$self->{args}};
+
+   my $fh = $self->{fh};
+   ref($fh) eq 'CODE' ? $fh->($message, $self) : print {$fh} $message;
 
    return;
 } ## end sub log
@@ -215,6 +233,18 @@ sub logconfess {
    require Carp;
    Carp::confess(@_);
 } ## end sub logconfess
+
+sub level {
+   my $self = shift;
+   $self = $_instance unless ref $self;
+   if (@_) {
+      my $level = shift;
+      return unless exists $id_for{$level};
+      $self->{level} = $id_for{$level};
+      $self->{_level_set_from_default} = 0;
+   }
+   return $self->{level};
+}
 
 BEGIN {
 
@@ -305,27 +335,17 @@ BEGIN {
       };
    } ## end for my $accessor (qw( level fh logexit_code ))
 
-   my $index = 0;
-   for my $name (qw( OFF FATAL ERROR WARN INFO DEBUG TRACE ALL )) {
+   my $index = -1;
+   for my $name (qw( DEAD OFF FATAL ERROR WARN INFO DEBUG TRACE )) {
       $name_of{$$name = $index} = $name;
       $id_for{$name} = $index;
       $id_for{$index} = $index;
       ++$index;
    }
+   $default_level = $DEAD;
 
    get_logger();    # initialises $_instance;
 } ## end BEGIN
-
-sub level {
-   my $self = shift;
-   $self = $_instance unless ref $self;
-   if (@_) {
-      my $level = shift;
-      return unless exists $id_for{$level};
-      $self->{level} = $id_for{$level};
-   }
-   return $self->{level};
-}
 
 1;                  # Magic true value required at end of module
 __END__
@@ -363,16 +383,21 @@ __END__
    # All stealth loggers are available
    LOGCONFESS 'I cannot accept this, for a whole stack of reasons!';
 
+   # Want to change layout?
+   $logger->layout('[%d %p] %m%n');
+   # or, equivalently
+   $logger->format('[%d %p] %m%n');
+
    # Want to send the output somewhere else?
    use IO::Handle;
    open my $fh, '>>', '/path/to/new.log';
    $fh->autoflush();
    $logger->fh($fh);
 
-   # Change layout?
-   $logger->layout('[%d %p] %m%n');
-   # or, equivalently
-   $logger->format('[%d %p] %m%n');
+   # Want to handle the output message by yourself?
+   my @queue; # all log messages will be put here
+   $logger->fh(sub { push @queue, $_[0] });
+
 
 =head1 DESCRIPTION
 
@@ -435,9 +460,61 @@ severity or I<importance>):
 
 =back
 
+In addition to the above, the following levels are defined as well:
+
+=over
+
+=item C<< $OFF >>
+
+also in L<Log::Log4perl>, useful to turn off all logging except for C<ALWAYS>
+
+=item C<< $DEAD >>
+
+not in L<Log::Log4perl>, when the threshold log level is set to this value
+every log is blocked (even when called from the C<ALWAYS> stealth logger).
+This is the default log level (but see L</Default Log Level> below for
+more about this).
+
+=back
+
 You can import these variables using the C<:levels> import facility,
 or you can use the directly from the L<Log::Log4perl::Tiny> namespace.
 They are imported automatically if the C<:easy> import option is specified.
+
+
+=head3 Default Log Level
+
+As of version 1.1.0, the default logging level is C<$DEAD> and no more
+C<$INFO>. This behaviour is not back-compatible, so you either have to
+set the log level explicitly after importing the module (e.g. using
+C<easy_init()>, C<LOGLEVEL()> or calling the C<level()> method) or you
+can set the default log level back to C<$INFO> providing the
+C<:default_to_INFO> import key. In this latter case:
+
+=over
+
+=item *
+
+if you already set the log level of the default logger in some way, e.g.
+calling C<LOGLEVEL>, before re-importing the module (possibly from a
+different file/module), it will NOT be changed. This happens also if
+you set the log level to the same value as the default, because in this
+case the best guess is that you are explicit about what you want
+
+=item *
+
+otherwise, if the default logger still has the default log level set
+(and it was never changed), it is turned into C<$INFO>
+
+=back
+
+This is useful if you intend to use this module inside some modules
+of yours, because it lets you import L<Log::Log4perl::Tiny> I<silently>,
+i.e. without the risk of generating actual log calls, while still
+giving you the possibility to turn back to the default behaviour of
+having a C<$INFO> default log level by means of a simple addition
+in your import line.
+
 
 =head2 Easy Mode Overview
 
@@ -497,6 +574,11 @@ Easy mode tries to mimic what L<Log::Log4perl> does, or at least
 the things that (from a purely subjective point of view) are most
 useful: C<easy_init()> and I<stealth loggers>.
 
+B<NOTE>: you MUST initialize the default logger with C<easy_init()>
+before using the easy mode, similarly to what happens (or should
+happen) with L<Log::Log4perl>. By default the logger's level is
+set to C<$DEAD>, which means that no log is emitted.
+
 =head2 C<easy_init()>
 
 L<Log::Log4perl::Tiny> only supports three options from the big
@@ -508,7 +590,7 @@ brother:
 
 the log level threshold. Logs sent at a higher or equal priority
 (i.e. at a more I<important> level, or equal) will be printed out,
-the others will be ignored. The default value is C<$INFO>;
+the others will be ignored. The default value is C<$DEAD>;
 
 =item C<< file >>
 
@@ -537,7 +619,8 @@ Otherwise, you have to pass a hash ref with the keys above.
 =head2 Stealth Loggers
 
 Stealth loggers are functions that emit a log message at a given
-severity; they are installed when C<:easy> mode is turned on.
+severity; they are installed when C<:easy> mode is turned on
+(see L</Easy Mode Overview> and the note about initialisation).
 
 They are named after the corresponding level:
 
@@ -565,7 +648,8 @@ in line with L<Log::Log4perl>):
 
 =item C<< ALWAYS >>
 
-emit log whatever the configured logging level;
+emit log whatever the configured logging level, apart from C<$OFF> that
+disables all logging;
 
 =item C<< LOGWARN >>
 
@@ -611,6 +695,10 @@ set the log level threshold for printing. If you want to be 100%
 compatible with Log::Log4perl, anyway, you should rather do the following:
 
    get_logger()->level(...);  # instead of LOGLEVEL(...)
+
+This function does not get imported when you specify C<:easy>, anyway,
+so you have to import it explicitly. This will help you remembering that
+you are deviating from L<Log::Log4perl>.
 
 =head2 Emitting Logs
 
@@ -672,7 +760,8 @@ explicit actions upon a logger object). Choose your preferred option.
 =head2 Functional Interface
 
 The functional interface sports the following functions (imported
-automatically when C<:easy> is passed as import option):
+automatically when C<:easy> is passed as import option except for
+C<LOGLEVEL>):
 
 =over
 
@@ -692,7 +781,7 @@ stealth logger functions, each emits a log at the corresponding level;
 
 =item C<< ALWAYS >>
 
-emit log whatever the configured logging level;
+emit log whatever the configured logging level (except C<$DEAD>);
 
 =item C<< LOGWARN >>
 
@@ -723,7 +812,9 @@ emit log at C<FATAL> level and then call C<Carp::croak()>;
 
 emit log at C<FATAL> level and then call C<Carp::confess()>;
 
-=item C<< LOGLEVEL >> (not in L<Log::Log4perl>)
+=item C<< LOGLEVEL >>
+
+(Not in L<Log::Log4perl>) (Not imported with C<:easy>)
 
 set the minimum log level for sending a log message to the output;
 
@@ -745,9 +836,35 @@ same used by the stealth logger functions described above).
 =item C<< new >>
 
 if for obscure reasons the default logger isn't what you want, you
-can get a brand new object!
+can get a brand new object! The constructor accepts either a
+list of key-values or a reference to a hash, supporting the
+following keys:
+
+=over
+
+=item B<< format >>
+
+=item B<< layout >>
+
+=item B<< file >>
+
+=item B<< level >>
+
+see L<< C<easy_init()> >> and the methods below with the same
+name
+
+=item B<< fh >>
+
+see method C<fh> below
 
 =back
+
+=back
+
+However you get a logger object, remember that the default log
+level is set to C<$DEAD>, which means that your object will not
+actually log anything unless you set the threshold that you
+see fit.
 
 The methods you can call upon the object mimic the functional
 interface, but with lowercase method names:
@@ -766,7 +883,7 @@ interface, but with lowercase method names:
 
 =item C<< fatal >>
 
-stealth logger functions, each emits a log at the corresponding level;
+logging functions, each emits a log at the corresponding level;
 
 =item C<< always >>
 
@@ -810,6 +927,7 @@ The main logging function is actually the following:
 =item C<< log >>
 
 the first parameter is the log level, the rest is the message to log
+apart from references to subroutines that are first evaluated
 
 =back
 
@@ -819,30 +937,46 @@ Additionally, you have the following accessors:
 
 =item C<< level >>
 
-set the minimum level for sending messages to the output stream;
+get/set the minimum level for sending messages to the output stream.
+By default the level is set to C<$DEAD> and all logging is disabled,
+so you should set it in some way.
 
 =item C<< fh >>
 
-set the output filehandle;
+get/set the output filehandle.
+
+As an extention over L<Log::Log4perl>,
+you can also set a reference to a subroutine as a filehandle, in
+which case it will be called with two parameters: the message that
+would be print and a reference to the logger object that is calling
+the sub. For example, if you simply want to collect the log
+messages without actually outputting them anywhere, you can do this:
+
+   my @messages;
+   get_logger()->fh(sub {
+      my ($message, $logger) = @_;
+      push @messages, $message;
+      return;
+   });
+
+By default this parameter is set to be equal to C<STDERR>.
 
 =item C<< format >>
 
 =item C<< layout >>
 
-set the line formatting;
+get/set the line formatting;
 
 =item C<< logexit_code >>
 
-set the exit code to be used with C<logexit()> and C<logwarn()> (and
+get/set the exit code to be used with C<logexit()> and C<logwarn()> (and
 C<logdie()> as well if C<die()> doesn't exit).
 
 =back
 
-
 =head1 DEPENDENCIES
 
 None.
-
 
 =head1 BUGS AND LIMITATIONS
 
