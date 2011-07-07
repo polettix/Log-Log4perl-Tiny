@@ -8,13 +8,13 @@ use Log::Log4perl::Tiny qw( :levels );
 
 my $logger = Log::Log4perl::Tiny::get_logger();
 ok($logger, 'got a logger instance');
-is($logger->level(), $DEAD, 'logger level set to DEAD as default');
+is($logger->level(), $INFO, 'logger level set to INFO as default');
 
-$logger->level($INFO);
-is($logger->level(), $INFO, 'logger level set to INFO as modified');
+$logger->level($WARN);
+is($logger->level(), $WARN, 'logger level set to WARN as modified');
 
 use_ok 'Log::Log4perl::Tiny';
-is($logger->level(), $INFO, 'logger level still set to INFO after new "use"');
+is($logger->level(), $WARN, 'logger level still set to WARN after new "use"');
 
 my $new_logger = Log::Log4perl::Tiny->new();
-is($new_logger->level(), $DEAD, 'new logger level set to DEAD as default');
+is($new_logger->level(), $INFO, 'new logger level set to INFO as default');

@@ -5,7 +5,7 @@ use warnings;
 use strict;
 
 our ($TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF, $DEAD);
-my ($_instance, %name_of, %format_for, %id_for, $default_level);
+my ($_instance, %name_of, %format_for, %id_for);
 
 sub import {
    my ($exporter, @list) = @_;
@@ -69,22 +69,24 @@ sub import {
       elsif ($item eq ':easy') {
          push @list, qw( :levels :subs :fake );
       }
-      elsif ($item eq ':default_to_INFO') {
-         $default_level = $INFO;
-         get_logger()->_reset_default_level();
+      elsif ($item eq ':default_to_DEAD') {
+         get_logger()->_set_level_if_default($DEAD);
       }
    } ## end for my $item (@list)
 
    return;
 } ## end sub import
 
-sub _reset_default_level {
-   my ($self, $do_reset) = @_;
-   $self->{_level_set_from_default} = 1 if $do_reset;
-   if ($self->{_level_set_from_default}) {
-      $self->level($default_level);
-      $self->{_level_set_from_default} = 1;
-   }
+sub _set_level_as_default {
+   my ($self, $level) = @_;
+   $self->level($level);
+   $self->{_level_set_from_default} = 1;
+   return;
+}
+
+sub _set_level_if_default {
+   my ($self, $level) = @_;
+   $self->_set_level_as_default($level) if $self->{_level_set_from_default};
    return;
 }
 
@@ -109,7 +111,7 @@ sub new {
    my $self = bless {
       fh    => \*STDERR,
    }, $package;
-   $self->_reset_default_level('force reset');
+   $self->_set_level_as_default($INFO);
 
    for my $accessor (qw( level fh format )) {
       next unless defined $args{$accessor};
@@ -342,7 +344,6 @@ BEGIN {
       $id_for{$index} = $index;
       ++$index;
    }
-   $default_level = $DEAD;
 
    get_logger();    # initialises $_instance;
 } ## end BEGIN
