@@ -468,7 +468,8 @@ severity or I<importance>):
 
 =back
 
-In addition to the above, the following levels are defined as well:
+The default log level is C<$INFO>. In addition to the above, the following
+levels are defined as well:
 
 =over
 
@@ -480,8 +481,6 @@ also in L<Log::Log4perl>, useful to turn off all logging except for C<ALWAYS>
 
 not in L<Log::Log4perl>, when the threshold log level is set to this value
 every log is blocked (even when called from the C<ALWAYS> stealth logger).
-This is the default log level (but see L</Default Log Level> below for
-more about this).
 
 =back
 
@@ -492,37 +491,36 @@ They are imported automatically if the C<:easy> import option is specified.
 
 =head3 Default Log Level
 
-As of version 1.1.0, the default logging level is C<$DEAD> and no more
-C<$INFO>. This behaviour is not back-compatible, so you either have to
-set the log level explicitly after importing the module (e.g. using
-C<easy_init()>, C<LOGLEVEL()> or calling the C<level()> method) or you
-can set the default log level back to C<$INFO> providing the
-C<:default_to_INFO> import key. In this latter case:
+As of version 1.1.0 the default logging level is still C<$INFO> like
+any previous version, but it is possible to modify this value to C<$DEAD>
+through the C<:dead_if_first> import key.
+
+This import key is useful to load Log::Log4perl in modules that you
+want to publish but where you don't want to force the end user to
+actually use it. In other terms, if you do this:
+
+   package My::Module;
+   use Log::Log4perl::Tiny qw( :easy :dead_if_first );
+
+you will import all the functionalities associated to C<:easy> but
+will silence the logger off I<unless> somewhere else the module
+is loaded (and imported) without this option. In this way:
 
 =over
 
 =item *
 
-if you already set the log level of the default logger in some way, e.g.
-calling C<LOGLEVEL>, before re-importing the module (possibly from a
-different file/module), it will NOT be changed. This happens also if
-you set the log level to the same value as the default, because in this
-case the best guess is that you are explicit about what you want
+if the user of your module does I<not> import L<Log::Log4perl::Tiny>,
+all log messages will be dropped (thanks to the log level set to
+C<$DEAD>)
 
 =item *
 
-otherwise, if the default logger still has the default log level set
-(and it was never changed), it is turned into C<$INFO>
+otherwise, if the user imports L<Log::Log4perl::Tiny> without the
+option, the log level will be set to the default value (unless it
+has already been explicitly set somewhere else).
 
 =back
-
-This is useful if you intend to use this module inside some modules
-of yours, because it lets you import L<Log::Log4perl::Tiny> I<silently>,
-i.e. without the risk of generating actual log calls, while still
-giving you the possibility to turn back to the default behaviour of
-having a C<$INFO> default log level by means of a simple addition
-in your import line.
-
 
 =head2 Easy Mode Overview
 
@@ -582,11 +580,6 @@ Easy mode tries to mimic what L<Log::Log4perl> does, or at least
 the things that (from a purely subjective point of view) are most
 useful: C<easy_init()> and I<stealth loggers>.
 
-B<NOTE>: you MUST initialize the default logger with C<easy_init()>
-before using the easy mode, similarly to what happens (or should
-happen) with L<Log::Log4perl>. By default the logger's level is
-set to C<$DEAD>, which means that no log is emitted.
-
 =head2 C<easy_init()>
 
 L<Log::Log4perl::Tiny> only supports three options from the big
@@ -598,7 +591,7 @@ brother:
 
 the log level threshold. Logs sent at a higher or equal priority
 (i.e. at a more I<important> level, or equal) will be printed out,
-the others will be ignored. The default value is C<$DEAD>;
+the others will be ignored. The default value is C<$INFO>;
 
 =item C<< file >>
 
@@ -628,7 +621,7 @@ Otherwise, you have to pass a hash ref with the keys above.
 
 Stealth loggers are functions that emit a log message at a given
 severity; they are installed when C<:easy> mode is turned on
-(see L</Easy Mode Overview> and the note about initialisation).
+(see L</Easy Mode Overview>).
 
 They are named after the corresponding level:
 
@@ -869,11 +862,6 @@ see method C<fh> below
 
 =back
 
-However you get a logger object, remember that the default log
-level is set to C<$DEAD>, which means that your object will not
-actually log anything unless you set the threshold that you
-see fit.
-
 The methods you can call upon the object mimic the functional
 interface, but with lowercase method names:
 
@@ -946,8 +934,7 @@ Additionally, you have the following accessors:
 =item C<< level >>
 
 get/set the minimum level for sending messages to the output stream.
-By default the level is set to C<$DEAD> and all logging is disabled,
-so you should set it in some way.
+By default the level is set to C<$INFO>.
 
 =item C<< fh >>
 
