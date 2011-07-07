@@ -3,6 +3,7 @@ package Log::Log4perl::Tiny;
 
 use warnings;
 use strict;
+use Carp;
 
 our ($TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF, $DEAD);
 my ($_instance, %name_of, %format_for, %id_for);
@@ -23,8 +24,8 @@ sub import {
       unshift @list, ':fake';
    } ## end if (grep { $_ eq ':full_or_fake'...
 
-   my %done;
- ITEM:
+   my (%done, $level_set);
+   ITEM:
    for my $item (@list) {
       next ITEM if $done{$item};
       $done{$item} = 1;
@@ -69,26 +70,23 @@ sub import {
       elsif ($item eq ':easy') {
          push @list, qw( :levels :subs :fake );
       }
-      elsif ($item eq ':default_to_DEAD') {
-         get_logger()->_set_level_if_default($DEAD);
+      elsif (lc($item) eq ':dead_if_first') {
+         get_logger()->_set_level_if_first($DEAD);
+         $level_set = 1;
+      }
+      else {
+         croak "unsupported import option '$item'";
       }
    } ## end for my $item (@list)
 
+   if (! $level_set) {
+      my $logger = get_logger();
+      $logger->_set_level_if_first($INFO);
+      $logger->level($logger->level());
+   }
+
    return;
 } ## end sub import
-
-sub _set_level_as_default {
-   my ($self, $level) = @_;
-   $self->level($level);
-   $self->{_level_set_from_default} = 1;
-   return;
-}
-
-sub _set_level_if_default {
-   my ($self, $level) = @_;
-   $self->_set_level_as_default($level) if $self->{_level_set_from_default};
-   return;
-}
 
 sub new {
    my $package = shift;
@@ -109,9 +107,9 @@ sub new {
    } ## end if (exists $args{file})
 
    my $self = bless {
-      fh    => \*STDERR,
+      fh     => \*STDERR,
+      level  => $INFO,
    }, $package;
-   $self->_set_level_as_default($INFO);
 
    for my $accessor (qw( level fh format )) {
       next unless defined $args{$accessor};
@@ -243,9 +241,18 @@ sub level {
       my $level = shift;
       return unless exists $id_for{$level};
       $self->{level} = $id_for{$level};
-      $self->{_level_set_from_default} = 0;
+      $self->{_count}++;
    }
    return $self->{level};
+}
+
+sub _set_level_if_first {
+   my ($self, $level) = @_;
+   if (! $self->{_count}) {
+      $self->level($level);
+      delete $self->{_count};
+   }
+   return;
 }
 
 BEGIN {

@@ -10,5 +10,5 @@ my $logger = Log::Log4perl::Tiny::get_logger();
 ok($logger, 'got a logger instance');
 is($logger->level(), $INFO, 'logger level set to INFO as default');
 
-use_ok('Log::Log4perl::Tiny', ':default_to_INFO');
-is($logger->level(), $INFO, 'logger level set to INFO after new import');
+use_ok('Log::Log4perl::Tiny', ':DEAD_if_first');
+is($logger->level(), $INFO, 'logger level still set to INFO after new import');
