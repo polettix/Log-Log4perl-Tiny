@@ -684,14 +684,14 @@ emit log at C<FATAL> level and then call C<Carp::confess()>;
 =back
 
 If you want to set the exit code for C<LOGWARN> and C<LOGEXIT> above
-(and L<LOGDIE> as well, in case C<die()> does not exit by itself),
+(and C<LOGDIE> as well, in case C<die()> does not exit by itself),
 you can go "the L<Log::Log4perl> way" and set
 C<$Log::Log4perl::LOGEXIT_CODE>, or set a code with
 C<logexit_code()> - but you have to wait to read something about the
 object-oriented interface before doing this!
 
 There is also one additional stealth function that L<Log::Log4perl>
-misses but that I think is of the outmoste importance: L<LOGLEVEL>, to
+misses but that I think is of the outmoste importance: C<LOGLEVEL>, to
 set the log level threshold for printing. If you want to be 100%
 compatible with Log::Log4perl, anyway, you should rather do the following:
 
