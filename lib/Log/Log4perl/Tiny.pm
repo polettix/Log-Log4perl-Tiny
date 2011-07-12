@@ -74,9 +74,6 @@ sub import {
          get_logger()->_set_level_if_first($DEAD);
          $level_set = 1;
       }
-      else {
-         croak "unsupported import option '$item'";
-      }
    } ## end for my $item (@list)
 
    if (! $level_set) {
