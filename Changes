@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.1.0     2011-07-12 08:50:25 Europe/Rome
    - final fixes to the documentation
    - removed die-ing when option is not recognised
    - release
