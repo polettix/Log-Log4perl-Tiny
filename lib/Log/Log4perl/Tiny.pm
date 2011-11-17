@@ -258,7 +258,17 @@ BEGIN {
    my $last_log = $^T;
    %format_for = (    # specifiers according to Log::Log4perl
       c => [s => sub { 'main' }],
-      C => [s => sub { (caller(4))[0] },],
+      C => [
+         s => sub {
+            my ($internal_package) = caller 0;
+            for my $i (1 .. 4) {
+               my ($package) = caller $i;
+               last unless defined $package;
+               return $package if $package ne $internal_package;
+            }
+            return '*undef*';
+           }
+      ],
       d => [
          s => sub {
             my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday,
