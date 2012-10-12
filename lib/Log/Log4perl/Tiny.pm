@@ -323,10 +323,19 @@ BEGIN {
    no strict 'refs';
 
    for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE )) {
+      
+      # create the ->level methods
       *{__PACKAGE__ . '::' . lc($name)} = sub {
          my $self = shift;
          return $self->log($$name, @_);
       };
+      
+      # and it ->is_level methods
+      *{__PACKAGE__ . '::is_' . lc($name)} = sub {
+         return 0 if $_[0]->{level} == $DEAD || $$name > $_[0]->{level};
+         return 1;
+      };
+      
    } ## end for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE ))
 
    for my $name (
@@ -887,6 +896,20 @@ interface, but with lowercase method names:
 =item C<< fatal >>
 
 logging functions, each emits a log at the corresponding level;
+
+=item C<< is_trace >>
+
+=item C<< is_debug >>
+
+=item C<< is_info >>
+
+=item C<< is_warn >>
+
+=item C<< is_error >>
+
+=item C<< is_fatal >>
+
+log level test functions, each returns the status of the corresponding level;
 
 =item C<< always >>
 
