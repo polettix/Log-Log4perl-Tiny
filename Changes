@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.2.0     2012-10-13 11:07:35 Europe/Rome
    - added support for is_<<level>> and is<<Level>>Enabled by
      mindthemonkey on GitHub
      (https://github.com/polettix/Log-Log4perl-Tiny/pull/1)
