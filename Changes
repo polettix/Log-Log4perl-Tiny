@@ -1,6 +1,6 @@
 {{$NEXT}}
    - logwarn/LOGWARN no longer exit, aligning behaviour to what
-     Log::Log4perl has today
+     Log::Log4perl has today (thanks to Felix Li for this)
 
 1.2.0     2012-10-13 11:07:35 Europe/Rome
    - added support for is_<<level>> and is<<Level>>Enabled by
