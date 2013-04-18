@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.2.1     2013-04-18 17:50:19 Europe/Rome
    - logwarn/LOGWARN no longer exit, aligning behaviour to what
      Log::Log4perl has today (thanks to Felix Li for this)
 
