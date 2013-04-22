@@ -1,4 +1,9 @@
 {{$NEXT}}
+   - fixed bugs in logdie & logwarn, now emitting output
+     according to behaviour of "real" warn() and die()
+   - fixed bugs in template expansion for some codes
+   - exclude Log::Log4perl::Tiny from Carp's messages
+   - all of the above thanks to Felix Li
 
 1.2.1     2013-04-18 17:50:19 Europe/Rome
    - logwarn/LOGWARN no longer exit, aligning behaviour to what
