@@ -187,13 +187,34 @@ sub _exit {
 sub logwarn {
    my $self = shift;
    $self->warn(@_);
+
+   # default warning when nothing is passed to warn
+   push @_, "Warning: something's wrong" unless @_;
+
+   # add 'at <file> line <line>' unless argument ends in "\n";
+   my (undef, $file, $line) = caller(1);
+   push @_, sprintf " at %s line %d.\n", $file, $line
+      if substr($_[-1], -1, 1) ne "\n";
+
+   # go for it!
    CORE::warn(@_);
 } ## end sub logwarn
 
 sub logdie {
    my $self = shift;
    $self->fatal(@_);
+
+   # default die message when nothing is passed to die
+   push @_, "Died" unless @_;
+
+   # add 'at <file> line <line>' unless argument ends in "\n";
+   my (undef, $file, $line) = caller(1);
+   push @_, sprintf " at %s line %d.\n", $file, $line
+      if substr($_[-1], -1, 1) ne "\n";
+
+   # go for it!
    CORE::die(@_);
+
    $self->_exit();
 } ## end sub logdie
 
@@ -207,6 +228,7 @@ sub logcarp {
    my $self = shift;
    $self->warn(@_);
    require Carp;
+   #local $Carp::Internal{__PACKAGE__()}++;
    Carp::carp(@_);
 } ## end sub logcarp
 
@@ -277,7 +299,17 @@ BEGIN {
               $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
            }
       ],
-      F => [s => sub { (caller(3))[1] },],
+      F => [
+         s => sub {
+            my ($internal_package) = caller 0;
+            for my $i (1 .. 4) {
+               my ($package, $file) = caller $i;
+               last unless defined $package;
+               return $file if $package ne $internal_package;
+            }
+            return '*undef*';
+           }
+      ],
       H => [
          s => sub {
             eval { require Sys::Hostname; Sys::Hostname::hostname() }
@@ -291,7 +323,17 @@ BEGIN {
             sprintf '%s %s (%d)', $subroutine, $filename, $line;
            }
       ],
-      L => [d => sub { (caller(3))[2] },],
+      L => [
+         d => sub {
+            my ($internal_package) = caller 0;
+            for my $i (1 .. 4) {
+               my ($package, undef, $line) = caller $i;
+               last unless defined $package;
+               return $line if $package ne $internal_package;
+            }
+            return -1;
+           }
+      ],
       m => [
          s => sub {
             join(
@@ -300,7 +342,17 @@ BEGIN {
             );
          },
       ],
-      M => [s => sub { (caller(4))[3] },],
+      M => [
+         s => sub {
+            my ($internal_package) = caller 0;
+            for my $i (1 .. 4) {
+               my ($package) = caller $i;
+               last unless defined $package;
+               return (caller($i + 1))[3] if $package ne $internal_package;
+            }
+            return '*undef*';
+           }
+      ],
       n => [s => sub { $/ },],
       p => [s => sub { $name_of{shift->{level}} },],
       P => [d => sub { $$ },],
