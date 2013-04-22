@@ -228,7 +228,7 @@ sub logcarp {
    my $self = shift;
    $self->warn(@_);
    require Carp;
-   #local $Carp::Internal{__PACKAGE__()}++;
+   $Carp::Internal{$_} = 1 for __PACKAGE__;
    Carp::carp(@_);
 } ## end sub logcarp
 
@@ -236,6 +236,7 @@ sub logcluck {
    my $self = shift;
    $self->warn(@_);
    require Carp;
+   $Carp::Internal{$_} = 1 for __PACKAGE__;
    Carp::cluck(@_);
 } ## end sub logcluck
 
@@ -243,6 +244,7 @@ sub logcroak {
    my $self = shift;
    $self->fatal(@_);
    require Carp;
+   $Carp::Internal{$_} = 1 for __PACKAGE__;
    Carp::croak(@_);
 } ## end sub logcroak
 
@@ -250,6 +252,7 @@ sub logconfess {
    my $self = shift;
    $self->fatal(@_);
    require Carp;
+   $Carp::Internal{$_} = 1 for __PACKAGE__;
    Carp::confess(@_);
 } ## end sub logconfess
 
