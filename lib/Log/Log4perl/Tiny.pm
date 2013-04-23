@@ -754,7 +754,7 @@ emit log at C<FATAL> level and then call C<Carp::confess()>;
 
 =back
 
-If you want to set the exit code for C<LOGWARN> and C<LOGEXIT> above
+If you want to set the exit code for C<LOGEXIT> above
 (and C<LOGDIE> as well, in case C<die()> does not exit by itself),
 you can go "the L<Log::Log4perl> way" and set
 C<$Log::Log4perl::LOGEXIT_CODE>, or set a code with
@@ -857,7 +857,7 @@ emit log whatever the configured logging level (except C<$DEAD>);
 
 =item C<< LOGWARN >>
 
-emit log at C<WARN> level, C<warn()> and then exit;
+emit log at C<WARN> level and then C<warn()> it;
 
 =item C<< LOGDIE >>
 
