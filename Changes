@@ -1,5 +1,6 @@
 {{$NEXT}}
    - fixed documentation bug for LOGWARN
+   - updated Copyright info (years)
 
 1.2.2     2013-04-23 01:42:51 Europe/Rome
    - fixed bugs in logdie & logwarn, now emitting output
