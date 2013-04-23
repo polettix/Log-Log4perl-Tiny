@@ -1,4 +1,7 @@
 {{$NEXT}}
+   - fixed documentation bug for LOGWARN
+
+1.2.2     2013-04-23 01:42:51 Europe/Rome
    - fixed bugs in logdie & logwarn, now emitting output
      according to behaviour of "real" warn() and die()
    - fixed bugs in template expansion for some codes

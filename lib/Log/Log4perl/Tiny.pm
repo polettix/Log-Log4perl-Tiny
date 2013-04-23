@@ -725,7 +725,7 @@ disables all logging;
 
 =item C<< LOGWARN >>
 
-emit log at C<WARN> level, C<warn()> and then exit;
+emit log at C<WARN> level and then C<warn()> it;
 
 =item C<< LOGDIE >>
 
