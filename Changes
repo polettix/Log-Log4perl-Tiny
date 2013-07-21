@@ -1,6 +1,10 @@
 {{$NEXT}}
    - fixed documentation bug for LOGWARN
    - updated Copyright info (years)
+   - fixed bug that made "%n" dependent on $/ variable instead
+     of being equal to "\n" like in original Log::Log4perl. Thanks
+     to clueless-newbie on GitHub
+     (https://github.com/polettix/Log-Log4perl-Tiny/pull/3)
 
 1.2.2     2013-04-23 01:42:51 Europe/Rome
    - fixed bugs in logdie & logwarn, now emitting output

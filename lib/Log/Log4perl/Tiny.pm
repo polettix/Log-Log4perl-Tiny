@@ -356,7 +356,7 @@ BEGIN {
             return '*undef*';
            }
       ],
-      n => [s => sub { $/ },],
+      n => [s => sub { "\n" },],
       p => [s => sub { $name_of{shift->{level}} },],
       P => [d => sub { $$ },],
       r => [d => sub { time - $^T },],

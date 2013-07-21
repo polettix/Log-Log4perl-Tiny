@@ -58,3 +58,12 @@ for my $test (@tests) {
       log_is { $logger->info(@$input) } $output, "format: '$format'";
    }
 } ## end for my $test (@tests)
+
+# Ensure that %n is not dependent on $/ or $\
+{
+   local $/;
+   local $\;
+   $logger->format('%n');
+   log_is { $logger->info('whatever') } "\n",
+      'format: "%n" with $/ and $\ undefined';
+}
