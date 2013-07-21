@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.2.3     2013-07-21 17:32:58 Europe/Rome
    - fixed documentation bug for LOGWARN
    - updated Copyright info (years)
    - fixed bug that made "%n" dependent on $/ variable instead
