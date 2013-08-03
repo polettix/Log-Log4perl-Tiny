@@ -1,4 +1,7 @@
 {{$NEXT}}
+   - fixed %r and %R to use Time::HiRes when available and set
+     time in milliseconds, with added tests
+   - documented %R
 
 1.2.3     2013-07-21 17:32:58 Europe/Rome
    - fixed documentation bug for LOGWARN

@@ -127,8 +127,6 @@ sub format {
 
    if (@_) {
       $self->{format} = shift;
-      $self->{args}   = [];
-
       $self->{args} = \my @args;
       my $replace = sub {
          my ($num, $op) = @_;
@@ -279,8 +277,20 @@ sub _set_level_if_first {
 
 BEGIN {
 
+   # Time tracking's start time. Used to be tied to $^T but Log::Log4perl
+   # does differently and uses Time::HiRes if available
+   my $start_time = time(); # default, according to Log::Log4perl
+   my $has_time_hires;
+   eval {
+      require Time::HiRes;
+      $has_time_hires = 1;
+      $start_time = [ Time::HiRes::gettimeofday() ];
+   };
+
+   # For supporting %R
+   my $last_log = $start_time;
+
    # %format_for idea from Log::Tiny by J. M. Adler
-   my $last_log = $^T;
    %format_for = (    # specifiers according to Log::Log4perl
       c => [s => sub { 'main' }],
       C => [
@@ -359,8 +369,32 @@ BEGIN {
       n => [s => sub { "\n" },],
       p => [s => sub { $name_of{shift->{level}} },],
       P => [d => sub { $$ },],
-      r => [d => sub { time - $^T },],
-      R => [d => sub { my $l = $last_log; ($last_log = time) - $l; },],
+      r => [d => ( $has_time_hires # install sub depending on Time::HiRes
+         ?  sub {
+               my ($s, $m) = Time::HiRes::gettimeofday();
+               $s -= $start_time->[0];
+               $m = int(($m - $start_time->[1]) / 1000);
+               ($s, $m) = ($s - 1, $m + 1000) if $m < 0;
+               return $m + 1000 * $s;
+            }
+         :  sub {
+               return 1000 * (time() - $start_time);
+            }
+      ) ],
+      R => [d => ( $has_time_hires # install sub depending on Time::HiRes
+         ?  sub {
+               my ($sx, $mx) = Time::HiRes::gettimeofday();
+               my $s = $sx - $last_log->[0];
+               my $m = int(($mx - $last_log->[1]) / 1000);
+               ($s, $m) = ($s - 1, $m + 1000) if $m < 0;
+               $last_log = [ $sx, $mx ];
+               return $m + 1000 * $s;
+            }
+         :  sub {
+               my $l = $last_log;
+               return 1000 * (($last_log = time()) - $l);
+            }
+      ) ],
       T => [
          s => sub {
             my $level = 4;
@@ -796,7 +830,6 @@ The log line layout sets the contents of a log line. The layout is
 configured as a C<printf>-like string, with placeholder identifiers
 that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
 
-
     %c Category of the logging event.
     %C Fully qualified package (or class) name of the caller
     %d Current date in yyyy/MM/dd hh:mm:ss format
@@ -813,6 +846,8 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
     %P pid of the current process
     %r Number of milliseconds elapsed from program start to logging 
        event
+    %R Number of milliseconds elapsed from last logging event including
+       a %R to current logging event
     %% A literal percent (%) sign
 
 Notably, both C<%x> (NDC) and C<%X> (MDC) are missing. Moreover, the
