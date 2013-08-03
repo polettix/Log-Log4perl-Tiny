@@ -92,11 +92,27 @@ sub new {
 
    $args{format} = $args{layout} if exists $args{layout};
 
-   if (exists $args{file}) {
-      open my $fh, $args{file}
-        or die "open('$args{file}'): $!";
+   my $fh;
+   if (exists $args{file_append}) {
+      open $fh, '>>', $args{file_append}
+        or die "open('$args{file_append}') for appending: $!";
+   }
+   elsif (exists $args{file_create}) {
+      open $fh, '>', $args{file_create}
+        or die "open('$args{file_create}') for creating: $!";
+   }
+   else {
+      my $filename = exists $args{file_insecure} ? $args{file_insecure}
+                   : exists $args{file}          ? $args{file}
+                   :                               undef;
+      if (defined $filename) {
+         open $fh, $filename
+           or die "open('$filename'): $!";
+      }
+   }
 
-      # Autoflush opened file
+   # autoflush new filehandle and add to args if applicable
+   if (defined $fh) {
       my $previous = select($fh);
       $|++;
       select($previous);
@@ -467,7 +483,7 @@ __END__
 
    use Log::Log4perl::Tiny qw( :easy );
    Log::Log4perl->easy_init({
-      file   => '>>/var/log/something.log',
+      file   => '/var/log/something.log',
       layout => '[%d] [%-5P:%-5p] %m%n',
       level  => $INFO,
    });
@@ -703,6 +719,17 @@ the others will be ignored. The default value is C<$INFO>;
 a file name where to send the log lines. For compatibility with
 L<Log::Log4perl>, a 2-arguments C<open()> will be performed, which
 means you can easily set the opening mode, e.g. C<<< >>filename >>>.
+
+Note that the 2-arguments C<open()> is intrinsically insecure and will
+trigger the following error when running setuid:
+
+   Insecure dependency in open while running setuid
+
+so be sure to use either C<file_create> or C<file_append> instead if
+you're running setuid. These are extensions added by Log::Log4perl::Tiny
+to cope with this specific case (and also to allow you avoid the 2-args
+C<open()> anyway).
+
 The default is to send logging messages to C<STDERR>;
 
 =item C<< layout >>
@@ -720,6 +747,11 @@ using five chars, left-aligned, the log message and a newline>.
 If you call C<easy_init()> with a single unblessed scalar, it is
 considered to be the C<level> and it will be set accordingly.
 Otherwise, you have to pass a hash ref with the keys above.
+
+In addition to the above keys, the C<easy_init()> method installed
+by Log::Log4perl::Tiny also accepts all keys defined for L</new>, e.g.
+C<format> (an alias for C<layout>) and the different alternatives to
+C<file> (C<file_insecure>, C<file_create> and C<file_append>).
 
 
 =head2 Stealth Loggers
@@ -949,11 +981,42 @@ following keys:
 
 =over
 
+
+=item B<< file >>
+
+=item B<< file_insecure >>
+
+=item B<< file_create >>
+
+=item B<< file_append >>
+
+set the file where log data should be sent. This option takes precedence
+over L</fh> below.
+
+The first one is kept for compliance with Log::Log4perl::easy_init's way
+of accepting a file. It eventually results in a two-arguments C<open()>
+call, so that you can quickly set how you want to open the file:
+
+   file => '>>/path/to/appended', # append mode
+   file => '>/path/to/new-file',  # create mode
+
+You should avoid doing this, because it is intrinsically insecure and will
+yield an error message when running setuid:
+
+   Insecure dependency in open while running setuid
+
+C<file_insecure> is an alias to C<file>, so that you can explicitly signal
+to the maintainer that you know what you're doing.
+
+C<file_create> and C<file_append> will use the three-arguments C<open()>
+call and thus they don't trigger the error above when running setuid. As
+the respective names suggest the former creates the file from scratch
+(possibly deleting any previous file with the same path) while the latter
+opens the file in append mode.
+
 =item B<< format >>
 
 =item B<< layout >>
-
-=item B<< file >>
 
 =item B<< level >>
 
