@@ -1,7 +1,9 @@
 {{$NEXT}}
    - fixed %r and %R to use Time::HiRes when available and set
-     time in milliseconds, with added tests
-   - documented %R
+     time in milliseconds, with added tests (RT85490, thanks Dominique Faure)
+   - documented %R (RT85490, thanks Dominique Faure)
+   - added file_insecure, file_create and file_append options for
+     new() and easy_init() (RT85852, thanks Pedro Davide Assunção)
 
 1.2.3     2013-07-21 17:32:58 Europe/Rome
    - fixed documentation bug for LOGWARN
