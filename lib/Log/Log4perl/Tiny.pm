@@ -127,8 +127,6 @@ sub format {
 
    if (@_) {
       $self->{format} = shift;
-      $self->{args}   = [];
-
       $self->{args} = \my @args;
       my $replace = sub {
          my ($num, $op) = @_;
