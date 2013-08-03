@@ -2,8 +2,12 @@
 use strict;
 use warnings;
 
-#use Test::More tests => 37;    # last test to print
-use Test::More 'no_plan';
+use Test::More tests => 26;    # last test to print
+#use Test::More 'no_plan';
+
+my $start;
+BEGIN { $start = time() }
+
 use Log::Log4perl::Tiny qw( :levels );
 
 use lib 't';
@@ -66,4 +70,42 @@ for my $test (@tests) {
    $logger->format('%n');
    log_is { $logger->info('whatever') } "\n",
       'format: "%n" with $/ and $\ undefined';
+}
+
+# Ensure %r and %R return milliseconds
+{
+   sleep 1; # ensure we go beyond 1000 milliseconds
+   my $collector = '';
+   open my $fh, '>', \$collector;
+   $logger->fh($fh);
+   $logger->format('%r %R');
+   $logger->info('whatever');
+   close $fh;
+
+   my $stop = time();
+   my $upper = (1 + $stop - $start) * 1000;
+
+   my ($r, $R) = split /\s/, $collector;
+   like($r, qr/\A\d+\z/, '%r has only digits');
+   like($R, qr/\A\d+\z/, '%R has only digits');
+   ok($r >= $R, "%r ($r) is greater or equal to %R ($R)");
+   ok($r > 1000, "%r ($r) is greater than 1000 (waited one second)");
+   ok($r < $upper, "%r ($r) is lower than other milliseconds benchmark ($upper)");
+   ok($R > 1000, "%R ($R) is greater than 1000");
+}
+
+# Ensure %R gets reset
+{
+   my $collector = '';
+   open my $fh, '>', \$collector;
+   $logger->fh($fh);
+   $logger->format('%r %R');
+   $logger->info('whatever');
+   close $fh;
+
+   my $stop = time();
+   my $upper = (1 + $stop - $start) * 1000;
+
+   my ($r, $R) = split /\s/, $collector;
+   ok($r >= $R + 1000, "new call, %r ($r) is 'much' greater than %R ($R)");
 }
