@@ -1,4 +1,5 @@
 {{$NEXT}}
+   - made test of %r and %R more robust (hopefully)
 
 1.2.4_01  2013-08-03 15:03:05 Europe/Rome
    - fixed %r and %R to use Time::HiRes when available and set

@@ -74,7 +74,7 @@ for my $test (@tests) {
 
 # Ensure %r and %R return milliseconds
 {
-   sleep 1; # ensure we go beyond 1000 milliseconds
+   sleep 1 while time() <= $start + 1; # ensure we go beyond 1000 milliseconds
    my $collector = '';
    open my $fh, '>', \$collector;
    $logger->fh($fh);
@@ -89,9 +89,9 @@ for my $test (@tests) {
    like($r, qr/\A\d+\z/, '%r has only digits');
    like($R, qr/\A\d+\z/, '%R has only digits');
    ok($r >= $R, "%r ($r) is greater or equal to %R ($R)");
-   ok($r > 1000, "%r ($r) is greater than 1000 (waited one second)");
+   ok($r >= 1000, "%r ($r) is greater than or equal to 1000 (waited one second)");
    ok($r < $upper, "%r ($r) is lower than other milliseconds benchmark ($upper)");
-   ok($R > 1000, "%R ($R) is greater than 1000");
+   ok($R >= 1000, "%R ($R) is greater than or equal to 1000");
 }
 
 # Ensure %R gets reset
