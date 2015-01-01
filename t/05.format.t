@@ -30,7 +30,7 @@ my @tests = (
    ['%d', ['whatever'], qr{\A\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\z}],
    ['%F', ['whatever'], 't/05.format.t'],
    ['%H', ['whatever'], $hostname],
-   ['%l', ['whatever'], qr{\ATestLLT::log_like t/TestLLT\.pm \(\d+\)\z}],
+   ['%l', ['whatever'], qr{\ATestLLT::log_like t[/\\]TestLLT\.pm \(\d+\)\z}],
    ['%L', ['whatever'], qr{\A\d+\z}],
    ['%m', [qw( frozz buzz )], 'frozzbuzz'],
    ['%M', ['whatever'], 'main::__ANON__'],
@@ -41,7 +41,7 @@ my @tests = (
    ['%R', ['whatever'], qr{\A\d+\z}],
    [
       '%T', ['whatever'],
-      qr{\ATestLLT::log_like\(\) called at t/\d+\..*?\.t line \d+}
+      qr{\ATestLLT::log_like\(\) called at t[/\\]\d+\..*?\.t line \d+}
    ],
    ['%m%n', [qw( foo bar )], "foobar$/"],
    [
@@ -74,7 +74,11 @@ for my $test (@tests) {
 
 # Ensure %r and %R return milliseconds
 {
-   sleep 1 while time() <= $start + 1; # ensure we go beyond 1000 milliseconds
+   sleep 1 while time() <= $start + 2; # ensure we go beyond 1000 milliseconds
+   # 2015-01-01 we have to sleep until we go around 2000 milliseconds to
+   # be sure we are beyond 1000 milliseconds, got one test complain because
+   # we arrived at 999 (on Windows).
+
    my $collector = '';
    open my $fh, '>', \$collector;
    $logger->fh($fh);
