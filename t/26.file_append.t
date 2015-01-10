@@ -2,8 +2,7 @@
 use strict;
 use warnings;
 
-#use Test::More tests => 37;    # last test to print
-use Test::More 'no_plan';
+use Test::More tests => 2;    # last test to print
 use Log::Log4perl::Tiny qw( :easy get_logger );
 
 use lib 't';
