@@ -92,36 +92,22 @@ sub new {
 
    $args{format} = $args{layout} if exists $args{layout};
 
-   my $fh;
-   if (exists $args{file_append}) {
-      open $fh, '>>', $args{file_append}
-        or die "open('$args{file_append}') for appending: $!";
-   }
-   elsif (exists $args{file_create}) {
-      open $fh, '>', $args{file_create}
-        or die "open('$args{file_create}') for creating: $!";
+   my $channels_input = [ fh => \*STDERR ];
+   if (exists $args{channels}) {
+      $channels_input = $args{channels};
    }
    else {
-      my $filename = exists $args{file_insecure} ? $args{file_insecure}
-                   : exists $args{file}          ? $args{file}
-                   :                               undef;
-      if (defined $filename) {
-         open $fh, $filename
-           or die "open('$filename'): $!";
+      for my $key (qw< file_append file_create file_insecure file fh >) {
+         next unless exists $args{$key};
+         $channels_input = [ $key => $args{$key} ];
+         last;
       }
    }
-
-   # autoflush new filehandle and add to args if applicable
-   if (defined $fh) {
-      my $previous = select($fh);
-      $|++;
-      select($previous);
-
-      $args{fh} = $fh;
-   } ## end if (exists $args{file})
+   my $channels = build_channels($channels_input);
+   $channels = $channels->[0] if @$channels == 1; # remove outer shell
 
    my $self = bless {
-      fh    => \*STDERR,
+      fh    => $channels,
       level => $INFO,
    }, $package;
 
@@ -134,6 +120,55 @@ sub new {
 
    return $self;
 } ## end sub new
+
+sub build_channels {
+   my @pairs = (@_ && ref($_[0])) ? @{$_[0]} : @_;
+   my @channels;
+   while (@pairs) {
+      my ($key, $value) = splice @pairs, 0, 2;
+
+      # some initial validation
+      croak "build_channels(): undefined key in list"
+         unless defined $key;
+      croak "build_channels(): undefined value for key $key"
+         unless defined $value;
+
+      # analyze the key-value pair and set the channel accordingly
+      my ($channel, $set_autoflush);
+      if ($key =~ m{\A(?: fh | sub | code | channel )\z}mxs) {
+         $channel = $value;
+      }
+      elsif ($key eq 'file_append') {
+         open $channel, '>>', $value
+           or croak "open('$value') for appending: $!";
+         $set_autoflush = 1;
+      }
+      elsif ($key eq 'file_create') {
+         open $channel, '>', $value
+           or croak "open('$value') for creating: $!";
+         $set_autoflush = 1;
+      }
+      elsif ($key =~ m{\A file (?: _insecure )? \z}mxs) {
+         open $channel, $value
+           or croak "open('$value'): $!";
+         $set_autoflush = 1;
+      }
+      else {
+         croak "unsupported channel key '$key'";
+      }
+
+      # autoflush new filehandle if applicable
+      if ($set_autoflush) {
+         my $previous = select($channel);
+         $|++;
+         select($previous);
+      } ## end if (exists $args{file})
+
+      # record the channel, on to the next
+      push @channels, $channel;
+   }
+   return \@channels;
+}
 
 sub get_logger { return $_instance ||= __PACKAGE__->new(); }
 sub LOGLEVEL { return get_logger()->level(@_); }
@@ -183,7 +218,10 @@ sub log {
      map { $format_for{$_}[1]->(\%data_for); } @{$self->{args}};
 
    my $fh = $self->{fh};
-   ref($fh) eq 'CODE' ? $fh->($message, $self) : print {$fh} $message;
+   for my $channel ((ref($fh) eq 'ARRAY') ? (@$fh) : ($fh)) {
+      (ref($channel) eq 'CODE') ? $channel->($message, $self)
+                                : print {$channel} $message;
+   }
 
    return;
 } ## end sub log
@@ -523,8 +561,17 @@ __END__
    $fh->autoflush();
    $logger->fh($fh);
 
+   # Want to multiplex output to different channels?
+   $logger->fh(
+      build_channels(
+         fh          => \*STDERR,
+         file_create => '/var/log/lastrun.log',
+         file_append => '/var/log/overall.log',
+      )
+   );
+
    # Want to handle the output message by yourself?
-   my @queue; # all log messages will be put here
+   my @queue; # e.g. all log messages will be put here
    $logger->fh(sub { push @queue, $_[0] });
 
 
@@ -729,6 +776,10 @@ so be sure to use either C<file_create> or C<file_append> instead if
 you're running setuid. These are extensions added by Log::Log4perl::Tiny
 to cope with this specific case (and also to allow you avoid the 2-args
 C<open()> anyway).
+
+Another Log::Log4perl::Tiny extension added as of version 1.3.0 is
+the key C<channels> where you can pass an array reference with
+channels descriptions (see L</build_channels> for details).
 
 The default is to send logging messages to C<STDERR>;
 
@@ -957,6 +1008,78 @@ emit log at C<FATAL> level and then call C<Carp::confess()>;
 
 set the minimum log level for sending a log message to the output;
 
+=item C<< build_channels >>
+
+(Not in L<Log::Log4perl>) (Not imported with C<:easy>)
+
+build multiple channels for emitting logs.
+
+   my $channels = build_channels(@key_value_pairs);  # OR
+   my $channels = build_channels(\@key_value_pairs);
+
+The input is a sequence of key-value pairs, provided either as
+a list or through a reference to an array containing them. They
+are not forced into a hash because the same key can appear
+multiple times to initialize multiple channels.
+
+The key specifies the type of the channel, while the value
+is specific to the key:
+
+=over
+
+=item B<< fh >>
+
+value is a filehandle (or anything that can be passed to the
+C<print> function)
+
+=item B<< sub >>
+
+=item B<< code >>
+
+value is a reference to a subroutine. This will be called with
+two positional parameters: the message (already properly formatted)
+and a reference to the logger message
+
+=item B<channel>
+
+whatever can be passed to keys C<fh> or to C<sub>/C<code> above
+
+=item B<< file >>
+
+=item B<< file_insecure >>
+
+=item B<< file_create >>
+
+=item B<< file_append >>
+
+value is the file where log data should be sent.
+
+The first one is kept for compliance with Log::Log4perl::easy_init's way
+of accepting a file. It eventually results in a two-arguments C<open()>
+call, so that you can quickly set how you want to open the file:
+
+   file => '>>/path/to/appended', # append mode
+   file => '>/path/to/new-file',  # create mode
+
+You should avoid doing this, because it is intrinsically insecure and will
+yield an error message when running setuid:
+
+   Insecure dependency in open while running setuid
+
+C<file_insecure> is an alias to C<file>, so that you can explicitly signal
+to the maintainer that you know what you're doing.
+
+C<file_create> and C<file_append> will use the three-arguments C<open()>
+call and thus they don't trigger the error above when running setuid. As
+the respective names suggest the former creates the file from scratch
+(possibly deleting any previous file with the same path) while the latter
+opens the file in append mode.
+
+
+
+=back
+
+
 =back
 
 =head2 Object-Oriented Interface
@@ -981,6 +1104,11 @@ following keys:
 
 =over
 
+=item B<< channels >>
+
+set a list (through an array reference) of channels. See
+L</build_channels> for additional information.
+
 
 =item B<< file >>
 
@@ -990,29 +1118,14 @@ following keys:
 
 =item B<< file_append >>
 
-set the file where log data should be sent. This option takes precedence
-over L</fh> below.
+set the file where the log data will be sent.
 
 The first one is kept for compliance with Log::Log4perl::easy_init's way
-of accepting a file. It eventually results in a two-arguments C<open()>
-call, so that you can quickly set how you want to open the file:
+of accepting a file. It eventually results in a two-arguments C<open()>,
+so you might want to take care when running in taint mode.
 
-   file => '>>/path/to/appended', # append mode
-   file => '>/path/to/new-file',  # create mode
-
-You should avoid doing this, because it is intrinsically insecure and will
-yield an error message when running setuid:
-
-   Insecure dependency in open while running setuid
-
-C<file_insecure> is an alias to C<file>, so that you can explicitly signal
-to the maintainer that you know what you're doing.
-
-C<file_create> and C<file_append> will use the three-arguments C<open()>
-call and thus they don't trigger the error above when running setuid. As
-the respective names suggest the former creates the file from scratch
-(possibly deleting any previous file with the same path) while the latter
-opens the file in append mode.
+See also L</build_channels> for additional information. This option takes
+precedence over C<fh> described below.
 
 =item B<< format >>
 
@@ -1133,13 +1246,15 @@ By default the level is set to C<$INFO>.
 
 =item C<< fh >>
 
-get/set the output filehandle.
+get/set the output channel.
 
 As an extention over L<Log::Log4perl>,
-you can also set a reference to a subroutine as a filehandle, in
-which case it will be called with two parameters: the message that
-would be print and a reference to the logger object that is calling
-the sub. For example, if you simply want to collect the log
+you can also pass a reference to a subroutine or to an array.
+
+If you set a reference to a sub,
+it will be called with two parameters: the message
+that would be print and a reference to the logger object that is
+calling the sub. For example, if you simply want to collect the log
 messages without actually outputting them anywhere, you can do this:
 
    my @messages;
@@ -1148,6 +1263,12 @@ messages without actually outputting them anywhere, you can do this:
       push @messages, $message;
       return;
    });
+
+If you set a reference to an array, each item inside will be used
+for log output; its elements can be either filehandles or sub
+references, used as described above. This is a handy way to set
+multiple output channels (it might be implemented externally
+through a proper subroutine reference of course).
 
 By default this parameter is set to be equal to C<STDERR>.
 

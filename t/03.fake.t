@@ -2,9 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';    # last test to print
-
-#use Test::More tests => 4;    # last test to print
+use Test::More tests => 6;    # last test to print
 use Log::Log4perl::Tiny qw( :fake get_logger );
 
 can_ok('Log::Log4perl', $_) for qw( import easy_init );
