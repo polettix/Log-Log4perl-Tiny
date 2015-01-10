@@ -281,6 +281,7 @@ sub logcarp {
    $self->warn(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
+   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
    Carp::carp(@_);
 } ## end sub logcarp
 
@@ -289,6 +290,7 @@ sub logcluck {
    $self->warn(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
+   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
    Carp::cluck(@_);
 } ## end sub logcluck
 
@@ -297,6 +299,7 @@ sub logcroak {
    $self->fatal(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
+   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
    Carp::croak(@_);
 } ## end sub logcroak
 
@@ -305,6 +308,7 @@ sub logconfess {
    $self->fatal(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
+   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
    Carp::confess(@_);
 } ## end sub logconfess
 
