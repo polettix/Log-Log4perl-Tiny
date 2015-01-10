@@ -207,6 +207,16 @@ sub format {
 
 *layout = \&format;
 
+sub emit_log {
+   my ($self, $message) = @_;
+   my $fh = $self->{fh};
+   for my $channel ((ref($fh) eq 'ARRAY') ? (@$fh) : ($fh)) {
+      (ref($channel) eq 'CODE') ? $channel->($message, $self)
+                                : print {$channel} $message;
+   }
+   return;
+}
+
 sub log {
    my $self = shift;
    return if $self->{level} == $DEAD;
@@ -221,13 +231,7 @@ sub log {
    my $message = sprintf $self->{format},
      map { $format_for{$_}[1]->(\%data_for); } @{$self->{args}};
 
-   my $fh = $self->{fh};
-   for my $channel ((ref($fh) eq 'ARRAY') ? (@$fh) : ($fh)) {
-      (ref($channel) eq 'CODE') ? $channel->($message, $self)
-                                : print {$channel} $message;
-   }
-
-   return;
+   return $self->emit_log($message);
 } ## end sub log
 
 sub ALWAYS { return $_instance->log($OFF, @_); }
@@ -1264,6 +1268,11 @@ The main logging function is actually the following:
 
 the first parameter is the log level, the rest is the message to log
 apart from references to subroutines that are first evaluated
+
+=item C<< emit_log >>
+
+emit the message in the first positional parameter to all logging
+channels
 
 =back
 

@@ -1,4 +1,7 @@
 {{$NEXT}}
+   - separated function for actual printing (emit_log())
+
+1.2.5_2   2015-01-10 19:23:07 Europe/Rome
    - added multichannel capabilities
    - fixed bug in using Carp functions
    - aligned logdie(), logwarn(), etc. to Log::Log4perl::Tiny
