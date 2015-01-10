@@ -1,4 +1,8 @@
 {{$NEXT}}
+   - added multichannel capabilities
+   - fixed bug in using Carp functions
+   - aligned logdie(), logwarn(), etc. to Log::Log4perl::Tiny
+   - added :no_extra_logdie_message
 
 1.2.5_01  2015-01-01 22:50:30 Europe/Rome
    - (hopefully) solving two issues in Windows testing

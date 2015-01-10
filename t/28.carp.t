@@ -2,8 +2,7 @@
 use strict;
 use warnings;
 
-#use Test::More tests => 8;    # last test to print
-use Test::More;    # last test to print
+use Test::More tests => 4;    # last test to print
 use Log::Log4perl::Tiny qw( :easy get_logger );
 
 use lib 't';

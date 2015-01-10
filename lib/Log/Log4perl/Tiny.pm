@@ -8,6 +8,7 @@ use Carp;
 
 our ($TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF, $DEAD);
 my ($_instance, %name_of, %format_for, %id_for);
+my $LOGDIE_MESSAGE_ON_STDERR = 1;
 
 sub import {
    my ($exporter, @list) = @_;
@@ -74,6 +75,9 @@ sub import {
       elsif (lc($item) eq ':dead_if_first') {
          get_logger()->_set_level_if_first($DEAD);
          $level_set = 1;
+      }
+      elsif (lc($item) eq ':no_extra_logdie_message') {
+         $LOGDIE_MESSAGE_ON_STDERR = 0;
       }
    } ## end for my $item (@list)
 
@@ -249,7 +253,7 @@ sub logwarn {
       if substr($_[-1], -1, 1) ne "\n";
 
    # go for it!
-   CORE::warn(@_);
+   CORE::warn(@_) if $LOGDIE_MESSAGE_ON_STDERR;
 } ## end sub logwarn
 
 sub logdie {
@@ -265,7 +269,7 @@ sub logdie {
       if substr($_[-1], -1, 1) ne "\n";
 
    # go for it!
-   CORE::die(@_);
+   CORE::die(@_) if $LOGDIE_MESSAGE_ON_STDERR;
 
    $self->_exit();
 } ## end sub logdie
@@ -278,38 +282,62 @@ sub logexit {
 
 sub logcarp {
    my $self = shift;
-   $self->warn(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-   Carp::carp(@_);
+   if ($self->is_warn()) { # avoid unless we're allowed to emit
+      my $message = Carp::shortmess(@_);
+      $self->warn($_) for split m{\n}mxs, $message;
+   }
+   if ($LOGDIE_MESSAGE_ON_STDERR) {
+      local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+      Carp::carp(@_);
+   }
+   return;
 } ## end sub logcarp
 
 sub logcluck {
    my $self = shift;
-   $self->warn(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-   Carp::cluck(@_);
+   if ($self->is_warn()) { # avoid unless we're allowed to emit
+      my $message = Carp::longmess(@_);
+      $self->warn($_) for split m{\n}mxs, $message;
+   }
+   if ($LOGDIE_MESSAGE_ON_STDERR) {
+      local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+      Carp::cluck(@_);
+   }
+   return;
 } ## end sub logcluck
 
 sub logcroak {
    my $self = shift;
-   $self->fatal(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-   Carp::croak(@_);
+   if ($self->is_fatal()) { # avoid unless we're allowed to emit
+      my $message = Carp::shortmess(@_);
+      $self->fatal($_) for split m{\n}mxs, $message;
+   }
+   if ($LOGDIE_MESSAGE_ON_STDERR) {
+      local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+      Carp::croak(@_);
+   }
+   $self->_exit();
 } ## end sub logcroak
 
 sub logconfess {
    my $self = shift;
-   $self->fatal(@_);
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-   Carp::confess(@_);
+   if ($self->is_fatal()) { # avoid unless we're allowed to emit
+      my $message = Carp::longmess(@_);
+      $self->fatal($_) for split m{\n}mxs, $message;
+   }
+   if ($LOGDIE_MESSAGE_ON_STDERR) {
+      local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+      Carp::confess(@_);
+   }
+   $self->_exit();
 } ## end sub logconfess
 
 sub level {
