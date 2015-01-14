@@ -1,4 +1,8 @@
 {{$NEXT}}
+   - fixed error in Carp testing, seems like the message in *BSD
+     was different some perl version ago - go figure!
+
+1.2.5_3   2015-01-10 20:06:00 Europe/Rome
    - separated function for actual printing (emit_log())
 
 1.2.5_2   2015-01-10 19:23:07 Europe/Rome

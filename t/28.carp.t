@@ -40,7 +40,7 @@ like $warnings[0], qr{(?mxs:
 is scalar(@dies), 1, 'one die was generated';
 like $dies[0], qr{(?mxs:
       \A sent\ from\ anothersub\ in\ CarpingModule
-         \ at .* $file \ line\ \d+\.
+         \ at .* $file \ line\ \d+\.?
       \s*\z
       )}, 'warning has the right message';
 
