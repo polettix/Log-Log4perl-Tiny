@@ -33,7 +33,7 @@ my $file = __FILE__;
 is scalar(@warnings), 1, 'one warning was generated';
 like $warnings[0], qr{(?mxs:
       \A sent\ from\ somesub\ in\ CarpingModule
-         \ at .* $file \ line\ \d+\.
+         \ at .* $file \ line\ \d+\.?
       \s*\z
       )}, 'warning has the right message';
 
