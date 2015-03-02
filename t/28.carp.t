@@ -28,7 +28,7 @@ $SIG{__DIE__} = sub {
    push @dies, @_;
 };
 eval { CarpingModule::somesub(); };
-my $file = __FILE__;
+my $file = quotemeta(__FILE__);
 
 is scalar(@warnings), 1, 'one warning was generated';
 like $warnings[0], qr{(?mxs:

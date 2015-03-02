@@ -28,7 +28,7 @@ my @tests = (
    ['%c', ['whatever'], 'main'],
    ['%C', ['whatever'], 'main'],
    ['%d', ['whatever'], qr{\A\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\z}],
-   ['%F', ['whatever'], 't/05.format.t'],
+   ['%F', ['whatever'], qr{\At[/\\]05\.format\.t\z}],
    ['%H', ['whatever'], $hostname],
    ['%l', ['whatever'], qr{\ATestLLT::log_like t[/\\]TestLLT\.pm \(\d+\)\z}],
    ['%L', ['whatever'], qr{\A\d+\z}],
