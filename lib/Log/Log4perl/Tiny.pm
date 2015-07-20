@@ -873,7 +873,7 @@ in line with L<Log::Log4perl>):
 
 =item C<< ALWAYS >>
 
-emit log whatever the configured logging level, apart from C<$OFF> that
+emit log whatever the configured logging level, apart from C<$DEAD> that
 disables all logging;
 
 =item C<< LOGWARN >>
