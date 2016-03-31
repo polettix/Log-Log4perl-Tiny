@@ -176,6 +176,17 @@ sub build_channels {
 
 sub get_logger { return $_instance ||= __PACKAGE__->new(); }
 sub LOGLEVEL { return get_logger()->level(@_); }
+sub LEVELID_FOR {
+   my $level = shift;
+   return $id_for{$level} if exists $id_for{$level};
+   return;
+}
+sub LEVELNAME_FOR {
+   my $id = shift;
+   return $name_of{$id} if exists $name_of{$id};
+   return $id if exists $id_for{$id};
+   return;
+}
 
 sub format {
    my $self = shift;
@@ -987,7 +998,7 @@ explicit actions upon a logger object). Choose your preferred option.
 
 The functional interface sports the following functions (imported
 automatically when C<:easy> is passed as import option except for
-C<LOGLEVEL>):
+C<LEVELID_FOR>, C<LEVELNAME_FOR> and C<LOGLEVEL>):
 
 =over
 
@@ -1008,6 +1019,19 @@ stealth logger functions, each emits a log at the corresponding level;
 =item C<< ALWAYS >>
 
 emit log whatever the configured logging level (except C<$DEAD>);
+
+=item C<< LEVELID_FOR >>
+
+returns the identifier related to a certain level. The input level can be
+either a name or an identifier itself. Returns C<undef> if it is neither.
+
+It can be used e.g. if you want to use L</log> but you only have the level
+name, not its identifier;
+
+=item C<< LEVELNAME_FOR >>
+
+returns the name related to a certain level. The input level can be either
+a name or an identifier itself. Returns C<undef> if it is neither.
 
 =item C<< LOGWARN >>
 

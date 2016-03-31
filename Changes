@@ -1,4 +1,5 @@
 {{$NEXT}}
+   - added LEVELNAME_FOR and LEVELID_FOR
 
 1.2.7     2015-03-03 00:10:32 Europe/Rome
    - fixed bug in tests for Windows (paths with backslashes)
