@@ -1,5 +1,10 @@
 {{$NEXT}}
 
+1.2.9     2016-04-01 09:41:28+02:00 Europe/Rome
+   - improved Kwalitee
+   - fixed spelling of SYNOPSYS in documentation
+   - release, 80 PASSes on CPAN Testers (thanks!)
+
 1.2.8     2016-03-31 18:58:15+02:00 Europe/Rome (TRIAL RELEASE)
    - added LEVELNAME_FOR and LEVELID_FOR
 
