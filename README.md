@@ -3,7 +3,7 @@ NAME
 
 Log::Log4perl::Tiny - mimic Log::Log4perl in one single module
 
-SYNOPSIS
+SYNOPSYS
 ========
 
     use Log::Log4perl::Tiny qw( :easy );
