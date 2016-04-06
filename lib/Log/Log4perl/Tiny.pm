@@ -564,7 +564,7 @@ BEGIN {
 1;                  # Magic true value required at end of module
 __END__
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
    use Log::Log4perl::Tiny qw( :easy );
    Log::Log4perl->easy_init({
