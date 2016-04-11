@@ -925,6 +925,16 @@ C<$Log::Log4perl::LOGEXIT_CODE>, or set a code with
 C<logexit_code()> - but you have to wait to read something about the
 object-oriented interface before doing this!
 
+As indicated, functions L</LOGWARN>, L</LOGDIE>, L</LOGCARP>,
+L</LOGCLUCK>, L</LOGCROACK>, and L</LOGCONFESS> (as well as their
+lowercase counterparts called as object methods) both emit the log
+message on the normal output channel for Log::Log4perl::Tiny and call
+the respective function. This might not be what you want in the default
+case where the output channel is standard error, because you will end up
+with duplicate error messages. You can avoid the call to the
+I<canonical> function setting import option C<:no_extra_logdie_message>,
+in line with what L<Log::Log4perl> provides.
+
 There is also one additional stealth function that L<Log::Log4perl>
 misses but that I think is of the outmoste importance: C<LOGLEVEL>, to
 set the log level threshold for printing. If you want to be 100%

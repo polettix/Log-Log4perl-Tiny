@@ -1,5 +1,6 @@
 {{$NEXT}}
    - fixed spelling back to SYNOPSIS in documentation, argh!
+   - documented :no_extra_logdie_message import option
 
 1.2.9     2016-04-01 09:41:28+02:00 Europe/Rome
    - improved Kwalitee
