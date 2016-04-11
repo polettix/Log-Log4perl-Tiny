@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.2.10    2016-04-11 11:25:53+02:00 Europe/Rome
    - fixed spelling back to SYNOPSIS in documentation, argh!
    - documented :no_extra_logdie_message import option
 
