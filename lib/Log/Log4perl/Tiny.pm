@@ -444,9 +444,16 @@ BEGIN {
       ],
       D => [
          s => sub {
-
+            my ($data, $op, $options) = @_;
+            $options = '' unless defined $options;
+            my %flag_for = map {$_ => 1} split /\s*,\s*/, lc($options);
+            my ($s, $u) = @{$data->{tod} ||= [$gtod->()]};
+            $u = substr "000000$u", -6, 6; # padding left with 0
+            return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u+0000", gmtime $s)
+               if $flag_for{utc};
+            return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u%z", localtime $s)
          },
-         #'optional',
+         'optional',
       ],
       F => [
          s => sub {
