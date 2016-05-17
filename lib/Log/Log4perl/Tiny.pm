@@ -195,22 +195,50 @@ sub format {
       $self->{format} = shift;
       $self->{args} = \my @args;
       my $replace = sub {
-         my ($num, $op) = @_;
-         return '%%' if $op eq '%';
-         return "%%$op" unless defined $format_for{$op};
-         push @args, $op;
-         return "%$num$format_for{$op}[0]";
+         if (defined $_[2]) { # op with options
+            my ($num, $opts, $op) = @_[0..2];
+            push @args, [$op, $opts];
+            return "%$num$format_for{$op}[0]";
+         }
+         if (defined $_[4]) { # op without options
+            my ($num, $op) = @_[3,4];
+            push @args, [$op];
+            return "%$num$format_for{$op}[0]";
+         }
+
+         # not an op
+         my $char = ((! defined($_[5])) || ($_[5] eq '%')) ? '' : $_[5];
+         return '%%' . $char; # keep the percent AND the char, if any
       };
 
       # transform into real format
-      my $format_chars = join '', keys %format_for;
-      $self->{format} =~ s{
+      my ($with_options, $standalone) = ('', '');
+      for my $key (keys %format_for) {
+         my $type = $format_for{$key}[2] || '';
+         $with_options .= $key if $type;
+         $standalone   .= $key if $type ne 'required';
+      }
+      # quotemeta or land on impossible character class if empty
+      $_ = length($_) ? quotemeta($_) : '^\\w\\W'
+         for ($with_options, $standalone);
+      $self->{format} =~ s<
             %                      # format marker
-            ( -? \d* (?:\.\d+)? )  # number
-            ([$format_chars])      # specifier
-         }
+            (?:
+                  (?:                       # something with options
+                     ( -? \d* (?:\.\d+)? )  # number
+                     ( (?:\{ .*? \}) )      # options
+                     ([$with_options])     # specifier
+                  )
+               |  (?:
+                     ( -? \d* (?:\.\d+)? )  # number
+                     ([$standalone])        # specifier
+                  )
+               |  (.)                       # just any char
+               |  \z                        # just the end of it!
+            )
+         >
          {
-            $replace->($1, $2);
+            $replace->($1, $2, $3, $4, $5, $6);
          }gsmex;
    } ## end if (@_)
    return $self->{format};
@@ -240,7 +268,7 @@ sub log {
       message => \@_,
    );
    my $message = sprintf $self->{format},
-     map { $format_for{$_}[1]->(\%data_for); } @{$self->{args}};
+     map { $format_for{$_->[0]}[1]->(\%data_for, @$_); } @{$self->{args}};
 
    return $self->emit_log($message);
 } ## end sub log
@@ -412,6 +440,12 @@ BEGIN {
             sprintf '%04d/%02d/%02d %02d:%02d:%02d',
               $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
            }
+      ],
+      D => [
+         s => sub {
+
+         },
+         #'optional',
       ],
       F => [
          s => sub {

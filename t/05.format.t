@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 26;    # last test to print
+use Test::More tests => 30;    # last test to print
 #use Test::More 'no_plan';
 
 my $start;
@@ -49,6 +49,10 @@ my @tests = (
       ['whatever', 'you', 'like'],
 qr{\A\[\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\] \[INFO \] whateveryoulike\n\z}
    ],
+   ['%{}n', ['whatever'], "%{}n"],
+   ['%%n', ['whatever'], "%n"],
+   ['%%', ['whatever'], "%"],
+   ['%', ['whatever'], "%"],
 );
 
 for my $test (@tests) {
