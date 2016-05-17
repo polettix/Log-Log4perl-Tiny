@@ -5,6 +5,7 @@ package Log::Log4perl::Tiny;
 use warnings;
 use strict;
 use Carp;
+use POSIX ();
 
 our ($TRACE, $DEBUG, $INFO, $WARN, $ERROR, $FATAL, $OFF, $DEAD);
 my ($_instance, %name_of, %format_for, %id_for);
@@ -438,11 +439,8 @@ BEGIN {
       d => [
          s => sub {
             my ($epoch) = @{shift->{tod} ||= [$gtod->()]};
-            my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday,
-               $isdst) = localtime($epoch);
-            sprintf '%04d/%02d/%02d %02d:%02d:%02d',
-              $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
-           }
+            return POSIX::strftime('%Y/%m/%d %H:%M:%S', localtime($epoch));
+         },
       ],
       D => [
          s => sub {
