@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 30;    # last test to print
+use Test::More tests => 33;    # last test to print
 #use Test::More 'no_plan';
 
 my $start;
@@ -28,6 +28,18 @@ my @tests = (
    ['%c', ['whatever'], 'main'],
    ['%C', ['whatever'], 'main'],
    ['%d', ['whatever'], qr{\A\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\z}],
+   [
+      '%D', ['whatever'],
+      qr<\A\d{4}-\d\d-\d\d \d\d:\d\d:\d\d.\d{6}[-+]\d{4}\z>
+   ],
+   [
+      '%{utc}D', ['whatever'],
+      qr<\A\d{4}-\d\d-\d\d \d\d:\d\d:\d\d.\d{6}\+0000\z>
+   ],
+   [
+      '%{local}D', ['whatever'],
+      qr<\A\d{4}-\d\d-\d\d \d\d:\d\d:\d\d.\d{6}[-+]\d{4}\z>
+   ],
    ['%F', ['whatever'], qr{\At[/\\]05\.format\.t\z}],
    ['%H', ['whatever'], $hostname],
    ['%l', ['whatever'], qr{\ATestLLT::log_like t[/\\]TestLLT\.pm \(\d+\)\z}],
