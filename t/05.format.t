@@ -1,8 +1,9 @@
 # vim: filetype=perl :
 use strict;
 use warnings;
+use Time::Local qw< timelocal timegm >;
 
-use Test::More tests => 33;    # last test to print
+use Test::More tests => 35;    # last test to print
 #use Test::More 'no_plan';
 
 my $start;
@@ -86,6 +87,32 @@ for my $test (@tests) {
    $logger->format('%n');
    log_is { $logger->info('whatever') } "\n",
       'format: "%n" with $/ and $\ undefined';
+}
+
+{
+   my $collector = '';
+   open my $fh, '>', \$collector;
+   $logger->fh($fh);
+   $logger->format('%D%n%{utc}D%n%{local}D');
+   $logger->info('whatever');
+   close $fh;
+
+   my ($default, $utc, $local) = split /\n/, $collector;
+   is $default, $local, 'default and local are the same';
+
+   my @ts = map {
+      my @time = m{
+         (\d+) - (\d+) - (\d+)  # date
+         \s+
+         (\d+) : (\d+) : (\d+)  # time
+      }mxs;
+      $time[0] -= 1900;
+      $time[1]--;
+      [reverse @time];
+   } ($utc, $local);
+
+   is_deeply timegm(@{$ts[0]}), timelocal(@{$ts[1]}),
+     'local and UTC refer to same time';
 }
 
 # Ensure %r and %R return milliseconds
