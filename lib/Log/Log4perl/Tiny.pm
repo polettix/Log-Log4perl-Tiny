@@ -445,7 +445,8 @@ BEGIN {
       D => [
          s => sub {
             my ($data, $op, $options) = @_;
-            $options = '' unless defined $options;
+            $options = '{}' unless defined $options;
+            $options = substr $options, 1, length($options) - 2;
             my %flag_for = map {$_ => 1} split /\s*,\s*/, lc($options);
             my ($s, $u) = @{$data->{tod} ||= [$gtod->()]};
             $u = substr "000000$u", -6, 6; # padding left with 0
