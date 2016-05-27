@@ -1,5 +1,11 @@
 {{$NEXT}}
 
+1.3.0     2016-05-28 00:10:42+02:00 Europe/Rome (TRIAL RELEASE)
+   - extended way for defining sprintf-like sequences in format()
+   - added %D/%{type}D sprintf option for timestamps with microseconds
+   - all sprintf in an expansion share the same time
+   - added extension sprintf %{key}e, loglocal and LOGLOCAL
+
 1.2.10    2016-04-11 11:25:53+02:00 Europe/Rome
    - fixed spelling back to SYNOPSIS in documentation, argh!
    - documented :no_extra_logdie_message import option
