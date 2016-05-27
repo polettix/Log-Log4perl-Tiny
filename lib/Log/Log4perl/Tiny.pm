@@ -123,6 +123,11 @@ sub new {
 
    $self->format('[%d] [%5p] %m%n') unless exists $self->{format};
 
+   if (exists $args{loglocal}) {
+      my $local = $args{loglocal};
+      $self->loglocal($_, $local->{$_}) for keys %$local;
+   }
+
    return $self;
 } ## end sub new
 
@@ -188,6 +193,15 @@ sub LEVELNAME_FOR {
    return $id if exists $id_for{$id};
    return;
 }
+
+sub loglocal {
+   my $self = shift;
+   my $key = shift;
+   my $retval = delete $self->{loglocal}{$key};
+   $self->{loglocal}{$key} = shift if @_;
+   return $retval;
+}
+sub LOGLOCAL { return get_logger->loglocal(@_) }
 
 sub format {
    my $self = shift;
@@ -267,6 +281,7 @@ sub log {
    my %data_for = (
       level   => $level,
       message => \@_,
+      (exists($self->{loglocal}) ? (loglocal => $self->{loglocal}) : ()),
    );
    my $message = sprintf $self->{format},
      map { $format_for{$_->[0]}[1]->(\%data_for, @$_); } @{$self->{args}};
@@ -454,7 +469,22 @@ BEGIN {
                if $flag_for{utc};
             return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u%z", localtime $s)
          },
-         'optional',
+         'optional'
+      ],
+      e => [
+         s => sub {
+            my ($data, $op, $options) = @_;
+            $data->{tod} ||= [$gtod->()]; # guarantee consistency here
+            my $local = $data->{loglocal} or return '';
+            my $key = substr $options, 1, length($options) - 2;
+            return '' unless exists $local->{$key};
+            my $target = $local->{$key};
+            return '' unless defined $target;
+            my $reft = ref $target or return $target;
+            return '' unless $reft eq 'CODE';
+            return $target->($data, $op, $options);
+         },
+         'required',
       ],
       F => [
          s => sub {
@@ -656,6 +686,20 @@ __END__
    # Want to handle the output message by yourself?
    my @queue; # e.g. all log messages will be put here
    $logger->fh(sub { push @queue, $_[0] });
+
+   # As of 1.4.0, you can set key-value pairs in the logger
+   $logger->loglocal(foo => 'bar');
+   LOGLOCAL(baz => 100);
+
+   # You can later retrieve the value in the format with %{key}e
+   $logger->format("[%{foo}e] [%{baz}e] %m%n");
+
+   # You are not limited to scalars, you can use references too
+   LOGLOCAL(baz => sub {
+      my ($data, $op, $ekey) = @_;
+      return join '.', @{$data->{tod}}; # epoch from gettimeofday
+   });
+   LOGLOCAL(foo => sub { return rand 100 });
 
 
 =head1 DESCRIPTION
@@ -1009,6 +1053,9 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
     %c Category of the logging event.
     %C Fully qualified package (or class) name of the caller
     %d Current date in yyyy/MM/dd hh:mm:ss format
+    %D Current date in 
+    %{type}D Current date as strftime's "%Y-%m-%d %H:%M:%S.$u%z"
+    %{key}e Evaluate or substitute (extension WRT Log::Log4perl)
     %F File where the logging event occurred
     %H Hostname
     %l Fully qualified name of the calling method followed by the
@@ -1026,12 +1073,56 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
        a %R to current logging event
     %% A literal percent (%) sign
 
-Notably, both C<%x> (NDC) and C<%X> (MDC) are missing. Moreover, the
-extended specifier feature with additional info in braces (like
-C<%d{HH:mm}>) is missing, i.e. the structure of each specifier above
-is fixed. (Thanks to C<Log::Tiny> for the cool trick of how to handle
-the C<printf>-like string, which is probably mutuated from
+Notably, both C<%x> (NDC) and C<%X> (MDC) are missing. The functionality
+for the latter is partially covered by the extension C<%e> explained
+below.  Moreover, the extended specifier feature with additional info in
+braces (like C<%d{HH:mm}>) is missing, i.e. the structure of each
+specifier above is fixed. (Thanks to C<Log::Tiny> for the cool trick of
+how to handle the C<printf>-like string, which is probably mutuated from
 C<Log::Log4perl> itself according to the comments).
+
+There are also two extensions with respect to Log::Log4perl, that help
+partially cover the missing items explained above, as of release 1.4.0:
+
+=over
+
+=item C<%D>
+
+=item C<%{type}D>
+
+expanded to a timestamp according to L<POSIX/strftime> specifier
+C<%Y-%m-%d %H:%M:%S.$u%z>, i.e. a timestamp that includes up to the
+microsecond (on platform where this is available, otherwise zeros will
+be used for sub-second values). By default the local time is used, but
+you can also pass a C<type> specifier set to the string C<utc>, in which
+case the UTC time will be used (via C<gmtime>).
+
+=item C<%{key}e>
+
+expanded according to what set via L</loglocal>/L</LOGLOCAL>. These two
+functions allow setting key-value pairs; the C<key> is used to find the
+associated value, then the value is returned as-is if it's a simple
+defined scalar, otherwise if it is a sub reference it is invoked,
+otherwise the empty string is returned.
+
+In case a subroutine reference is set, it is called with the following
+parameters:
+
+   $sub->($data, $op, $options);
+
+where C<$data> is a reference to a hash that contains at least the
+C<tod> key, associated to an array with the output of C<gettimeofday>
+(if L<Time::HiRes> is available) or its equivalent (if L<Time::HiRes> is
+not available), C<$op> is the letter C<e> and C<$options> is the string
+containing the C<key> in braces (e.g. C<{this-is-the-key}>).
+
+=back
+
+As of release 1.4.0 all time-expansions in a single log refer to the
+same time, i.e. if you specify the format string C<%D %D> and you have
+microsecond-level resolution, the two values in output will be the same
+(as opposed to show two slightly different times, related to the
+different expansion times of the C<%D> specifier).
 
 
 =head1 INTERFACE 
@@ -1113,6 +1204,13 @@ emit log at C<FATAL> level and then call C<Carp::confess()>;
 (Not in L<Log::Log4perl>) (Not imported with C<:easy>)
 
 set the minimum log level for sending a log message to the output;
+
+=item C<< LOGLOCAL >>
+
+(Not in L<Log::Log4perl>) (Not imported with C<:easy>) (As of 1.4.0) 
+
+set a key-value pair useful for later expansion via code C<%{key}e>. See
+L</loglocal> below;
 
 =item C<< build_channels >>
 
@@ -1216,6 +1314,11 @@ set a list (through an array reference) of channels. See
 L</build_channels> for additional information.
 
 
+=item B<< fh >>
+
+see method C<fh> below
+
+
 =item B<< file >>
 
 =item B<< file_insecure >>
@@ -1233,6 +1336,7 @@ so you might want to take care when running in taint mode.
 See also L</build_channels> for additional information. This option takes
 precedence over C<fh> described below.
 
+
 =item B<< format >>
 
 =item B<< layout >>
@@ -1242,9 +1346,11 @@ precedence over C<fh> described below.
 see L<< C<easy_init()> >> and the methods below with the same
 name
 
-=item B<< fh >>
 
-see method C<fh> below
+=item B<< loglocal >>
+
+pass a reference to a hash with key-value pairs to be set via
+L</loglocal>;
 
 =back
 
@@ -1393,6 +1499,23 @@ get/set the line formatting;
 
 get/set the exit code to be used with C<logexit()> (and
 C<logdie()> as well if C<die()> doesn't exit).
+
+=item C<< loglocal >>
+
+get/set a local key-value pair for expansion with C<%{key}e>.
+
+Always returns the previous value associated to the provided key,
+removing it:
+
+   my $value = $logger->loglocal('some-key');
+   # now, 'some-key' does not exist any more and has no value associated
+
+If you pass a value too, it will be set:
+
+   $logger->loglocal(foo => 'bar');
+   my $old = $logger->loglocal(foo => 'whatever');
+   # $old is 'bar'
+   # current value associated to foo is 'whatever'
 
 =back
 
