@@ -554,6 +554,7 @@ BEGIN {
             (undef, $filename, $line) = caller($i += $caller_depth)
                if $caller_depth;
             my (undef, undef, undef, $subroutine) = caller($i + 1);
+            $subroutine = "main::" unless defined $subroutine;
             return sprintf '%s %s (%d)', $subroutine, $filename, $line;
          },
       ],
@@ -595,6 +596,7 @@ BEGIN {
             return '*undef' if $i > 4;
             $i += $caller_depth if $caller_depth;
             my (undef, undef, undef, $subroutine) = caller($i + 1);
+            $subroutine = "main::" unless defined $subroutine;
             return $subroutine;
          },
       ],
@@ -631,17 +633,13 @@ BEGIN {
                ++$level;
             }
             return '*undef' if $level > 4;
-            $level += $caller_depth if $caller_depth;
-            my @chunks;
-            while (my @caller = caller($level++)) {
-               push @chunks,
-                 "$caller[3]() called at $caller[1] line $caller[2]";
-            }
-            $chunks[0] =~
-               s{(?mxs:
-                  \A Log::Log4perl::Tiny::__ANON__
-                  )}{Log::Log4perl::Tiny->\$log_function}mxs;
-            join ",\n", @chunks;
+
+            local $Carp::CarpLevel =
+              $Carp::CarpLevel + $level + $caller_depth;
+            chomp(my $longmess = Carp::longmess());
+            $longmess =~ s{(?:\A\s*at.*?\n|^\s*)}{}mxsg;
+            $longmess =~ s{\n}{, }g;
+            return $longmess;
          },
       ],
    );
