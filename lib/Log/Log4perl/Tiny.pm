@@ -634,6 +634,9 @@ BEGIN {
             }
             return '*undef' if $level > 4;
 
+            # usage of Carp::longmess() and substitutions is mostly copied
+            # from Log::Log4perl for better alignment and easier
+            # transition to the "bigger" module
             local $Carp::CarpLevel =
               $Carp::CarpLevel + $level + $caller_depth;
             chomp(my $longmess = Carp::longmess());
