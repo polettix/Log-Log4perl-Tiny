@@ -46,7 +46,7 @@ my @tests = (
    ['%H', ['whatever'], $hostname],
    [
       '%l', ['whatever'],
-      qr{\ATestLLT::log_like t[/\\]TestLLT\.pm \(\d+\)\z}
+      qr{\Amain::__ANON__ t[/\\]05\.format\.t \(\d+\)\z}
    ],
    ['%L', ['whatever'], qr{\A\d+\z}],
    ['%m', [qw( frozz buzz )], 'frozzbuzz'],
@@ -58,7 +58,12 @@ my @tests = (
    ['%R', ['whatever'], qr{\A\d+\z}],
    [
       '%T', ['whatever'],
-      qr{\ATestLLT::log_like\(\) called at t[/\\]\d+\..*?\.t line \d+}
+      qr{(?mxs:
+         \A
+            Log::Log4perl::Tiny .*?
+            ^TestLLT::log_like\(\)\ called\ 
+            at\ t[/\\]05\.format\.t\ line\ \d+
+         )}
    ],
    ['%m%n', [qw( foo bar )], "foobar$/"],
    [

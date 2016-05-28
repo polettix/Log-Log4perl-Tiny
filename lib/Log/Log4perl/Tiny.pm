@@ -444,19 +444,31 @@ BEGIN {
       require Time::Local;
    }
 
+   { # alias to the one in Log::Log4perl, for easier switching towards that
+      no strict 'refs';
+      *caller_depth = *Log::Log4perl::caller_depth;
+   }
+   our $caller_depth;
+   $caller_depth ||= 0;
+
    # %format_for idea from Log::Tiny by J. M. Adler
    %format_for = (    # specifiers according to Log::Log4perl
       c => [s => sub { 'main' }],
       C => [
          s => sub {
             my ($internal_package) = caller 0;
-            for my $i (1 .. 4) {
-               my ($package) = caller $i;
-               last unless defined $package;
-               return $package if $package ne $internal_package;
+            my $i = 1;
+            my $package;
+            while ($i <= 4) {
+               ($package) = caller $i;
+               return '*undef*' unless defined $package;
+               last if $package ne $internal_package;
+               ++$i;
             }
-            return '*undef*';
-           }
+            return '*undef' if $i > 4;
+            ($package) = caller($i += $caller_depth) if $caller_depth;
+            return $package;
+         },
       ],
       d => [
          s => sub {
@@ -508,37 +520,59 @@ BEGIN {
       F => [
          s => sub {
             my ($internal_package) = caller 0;
-            for my $i (1 .. 4) {
-               my ($package, $file) = caller $i;
-               last unless defined $package;
-               return $file if $package ne $internal_package;
+            my $i = 1;
+            my ($package, $file);
+            while ($i <= 4) {
+               ($package, $file) = caller $i;
+               return '*undef*' unless defined $package;
+               last if $package ne $internal_package;
+               ++$i;
             }
-            return '*undef*';
-           }
+            return '*undef' if $i > 4;
+            (undef, $file) = caller($i += $caller_depth) if $caller_depth;
+            return $file;
+         },
       ],
       H => [
          s => sub {
             eval { require Sys::Hostname; Sys::Hostname::hostname() }
               || '';
-           }
+         },
       ],
       l => [
          s => sub {
-            my (undef, undef, undef, $subroutine) = caller(4);
-            my (undef, $filename, $line) = caller(3);
-            sprintf '%s %s (%d)', $subroutine, $filename, $line;
-           }
+            my ($internal_package) = caller 0;
+            my $i = 1;
+            my ($package, $filename, $line);
+            while ($i <= 4) {
+               ($package, $filename, $line) = caller $i;
+               return '*undef*' unless defined $package;
+               last if $package ne $internal_package;
+               ++$i;
+            }
+            return '*undef' if $i > 4;
+            (undef, $filename, $line) = caller($i += $caller_depth)
+               if $caller_depth;
+            my (undef, undef, undef, $subroutine) = caller($i + 1);
+            return sprintf '%s %s (%d)', $subroutine, $filename, $line;
+         },
       ],
       L => [
          d => sub {
             my ($internal_package) = caller 0;
-            for my $i (1 .. 4) {
-               my ($package, undef, $line) = caller $i;
-               last unless defined $package;
-               return $line if $package ne $internal_package;
+            my $i = 1;
+            my ($package, $line);
+            while ($i <= 4) {
+               ($package, undef, $line) = caller $i;
+               return -1 unless defined $package;
+               last if $package ne $internal_package;
+               ++$i;
             }
-            return -1;
-           }
+            return -1 if $i > 4;
+            (undef, undef, $line) = caller($i += $caller_depth)
+               if $caller_depth;
+            return $line;
+         },
       ],
       m => [
          s => sub {
@@ -551,13 +585,18 @@ BEGIN {
       M => [
          s => sub {
             my ($internal_package) = caller 0;
-            for my $i (1 .. 4) {
+            my $i = 1;
+            while ($i <= 4) {
                my ($package) = caller $i;
-               last unless defined $package;
-               return (caller($i + 1))[3] if $package ne $internal_package;
+               return '*undef*' unless defined $package;
+               last if $package ne $internal_package;
+               ++$i;
             }
-            return '*undef*';
-           }
+            return '*undef' if $i > 4;
+            $i += $caller_depth if $caller_depth;
+            my (undef, undef, undef, $subroutine) = caller($i + 1);
+            return $subroutine;
+         },
       ],
       n => [s => sub { "\n" },],
       p => [s => sub { $name_of{shift->{level}} },],
@@ -583,13 +622,26 @@ BEGIN {
       ],
       T => [
          s => sub {
-            my $level = 4;
+            my ($internal_package) = caller 0;
+            my $level = 1;
+            while ($level <= 4) {
+               my ($package) = caller $level;
+               return '*undef*' unless defined $package;
+               last if $package ne $internal_package;
+               ++$level;
+            }
+            return '*undef' if $level > 4;
+            $level += $caller_depth if $caller_depth;
             my @chunks;
             while (my @caller = caller($level++)) {
                push @chunks,
                  "$caller[3]() called at $caller[1] line $caller[2]";
             }
-            join ', ', @chunks;
+            $chunks[0] =~
+               s{(?mxs:
+                  \A Log::Log4perl::Tiny::__ANON__
+                  )}{Log::Log4perl::Tiny->\$log_function}mxs;
+            join ",\n", @chunks;
          },
       ],
    );
@@ -1090,6 +1142,7 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
        event
     %R Number of milliseconds elapsed from last logging event including
        a %R to current logging event
+    %T A stack trace of functions called
     %% A literal percent (%) sign
 
 Notably, both C<%x> (NDC) and C<%X> (MDC) are missing. The functionality
@@ -1143,6 +1196,39 @@ microsecond-level resolution, the two values in output will be the same
 (as opposed to show two slightly different times, related to the
 different expansion times of the C<%D> specifier).
 
+=head2 Wrapping Log::Log4perl::Tiny
+
+As of release 1.4.0, all expansion sequences that imply using C<caller>
+(namely C<%C>, C<%F>, C<%l>, C<%L>, C<%M>, and C<%T>) will honor
+whatever you set for C<Log::Log4perl::caller_depth> or
+C<Log::Log4perl::Tiny::caller_depth> (they're aliased), defaulting to
+value C<0>. You can basically increase this value by 1 for each wrapper
+function that you don't want to appear from the I<real> caller's point
+of view. In the following example, we have two nested wrappers, each of
+which takes care to increase the value by 1 to be hidden:
+
+   sub my_wrapper_logger {
+      local $Log::Log4perl::Tiny::caller_depth =
+         $Log::Log4perl::Tiny::caller_depth + 1; # ignore my_wrapper_logger
+      INFO(@_);
+   }
+
+   # ... somewhere else...
+   sub wrap_wrapper {
+      local $Log::Log4perl::Tiny::caller_depth =
+         $Log::Log4perl::Tiny::caller_depth + 1; # ignore wrap_wrapper
+      my_wrapper_logger(@_);
+   }
+
+The I<control> variable is either L<Log::Log4perl::Tiny::caller_depth>
+or L<Log::Log4perl::caller_depth>, as a matter of fact they are aliased
+(i.e. changing either one will also change the other). This is
+intentional to let you switch towards L<Log::Log4perl> should you need
+to upgrade to it.
+
+See
+L<Log::Log4perl/Using Log::Log4perl with wrapper functions and classes>
+for further information.
 
 =head1 INTERFACE 
 
