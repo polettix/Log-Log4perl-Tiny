@@ -25,7 +25,7 @@ sub import {
          1;
       " and return;
       unshift @list, ':fake';
-   } ## end if (grep { $_ eq ':full_or_fake'...
+   } ## end if (grep { $_ eq ':full_or_fake'...})
 
    my (%done, $level_set);
  ITEM:
@@ -68,7 +68,7 @@ sub import {
                   $_instance->level($conf);
                }
             };
-         } ## end if (!'Log::Log4perl'->can...
+         } ## end if (!'Log::Log4perl'->...)
       } ## end elsif ($item =~ /\A : (mimic | mask | fake) \z/mxs)
       elsif ($item eq ':easy') {
          push @list, qw( :levels :subs :fake );
@@ -80,7 +80,7 @@ sub import {
       elsif (lc($item) eq ':no_extra_logdie_message') {
          $LOGDIE_MESSAGE_ON_STDERR = 0;
       }
-   } ## end for my $item (@list)
+   } ## end ITEM: for my $item (@list)
 
    if (!$level_set) {
       my $logger = get_logger();
@@ -97,19 +97,19 @@ sub new {
 
    $args{format} = $args{layout} if exists $args{layout};
 
-   my $channels_input = [ fh => \*STDERR ];
+   my $channels_input = [fh => \*STDERR];
    if (exists $args{channels}) {
       $channels_input = $args{channels};
    }
    else {
       for my $key (qw< file_append file_create file_insecure file fh >) {
          next unless exists $args{$key};
-         $channels_input = [ $key => $args{$key} ];
+         $channels_input = [$key => $args{$key}];
          last;
       }
-   }
+   } ## end else [ if (exists $args{channels...})]
    my $channels = build_channels($channels_input);
-   $channels = $channels->[0] if @$channels == 1; # remove outer shell
+   $channels = $channels->[0] if @$channels == 1;    # remove outer shell
 
    my $self = bless {
       fh    => $channels,
@@ -139,9 +139,9 @@ sub build_channels {
 
       # some initial validation
       croak "build_channels(): undefined key in list"
-         unless defined $key;
+        unless defined $key;
       croak "build_channels(): undefined value for key $key"
-         unless defined $value;
+        unless defined $value;
 
       # analyze the key-value pair and set the channel accordingly
       my ($channel, $set_autoflush);
@@ -172,35 +172,37 @@ sub build_channels {
          my $previous = select($channel);
          $|++;
          select($previous);
-      } ## end if (exists $args{file})
+      }
 
       # record the channel, on to the next
       push @channels, $channel;
-   }
+   } ## end while (@pairs)
    return \@channels;
-}
+} ## end sub build_channels
 
 sub get_logger { return $_instance ||= __PACKAGE__->new(); }
 sub LOGLEVEL { return get_logger()->level(@_); }
+
 sub LEVELID_FOR {
    my $level = shift;
    return $id_for{$level} if exists $id_for{$level};
    return;
-}
+} ## end sub LEVELID_FOR
+
 sub LEVELNAME_FOR {
    my $id = shift;
    return $name_of{$id} if exists $name_of{$id};
    return $id if exists $id_for{$id};
    return;
-}
+} ## end sub LEVELNAME_FOR
 
 sub loglocal {
-   my $self = shift;
-   my $key = shift;
+   my $self   = shift;
+   my $key    = shift;
    my $retval = delete $self->{loglocal}{$key};
    $self->{loglocal}{$key} = shift if @_;
    return $retval;
-}
+} ## end sub loglocal
 sub LOGLOCAL { return get_logger->loglocal(@_) }
 
 sub format {
@@ -208,22 +210,22 @@ sub format {
 
    if (@_) {
       $self->{format} = shift;
-      $self->{args} = \my @args;
+      $self->{args}   = \my @args;
       my $replace = sub {
-         if (defined $_[2]) { # op with options
-            my ($num, $opts, $op) = @_[0..2];
+         if (defined $_[2]) {    # op with options
+            my ($num, $opts, $op) = @_[0 .. 2];
             push @args, [$op, $opts];
             return "%$num$format_for{$op}[0]";
          }
-         if (defined $_[4]) { # op without options
-            my ($num, $op) = @_[3,4];
+         if (defined $_[4]) {    # op without options
+            my ($num, $op) = @_[3, 4];
             push @args, [$op];
             return "%$num$format_for{$op}[0]";
          }
 
          # not an op
-         my $char = ((! defined($_[5])) || ($_[5] eq '%')) ? '' : $_[5];
-         return '%%' . $char; # keep the percent AND the char, if any
+         my $char = ((!defined($_[5])) || ($_[5] eq '%')) ? '' : $_[5];
+         return '%%' . $char;    # keep the percent AND the char, if any
       };
 
       # transform into real format
@@ -233,9 +235,10 @@ sub format {
          $with_options .= $key if $type;
          $standalone   .= $key if $type ne 'required';
       }
+
       # quotemeta or land on impossible character class if empty
       $_ = length($_) ? quotemeta($_) : '^\\w\\W'
-         for ($with_options, $standalone);
+        for ($with_options, $standalone);
       $self->{format} =~ s<
             %                      # format marker
             (?:
@@ -265,11 +268,12 @@ sub emit_log {
    my ($self, $message) = @_;
    my $fh = $self->{fh};
    for my $channel ((ref($fh) eq 'ARRAY') ? (@$fh) : ($fh)) {
-      (ref($channel) eq 'CODE') ? $channel->($message, $self)
-                                : print {$channel} $message;
+      (ref($channel) eq 'CODE')
+        ? $channel->($message, $self)
+        : print {$channel} $message;
    }
    return;
-}
+} ## end sub emit_log
 
 sub log {
    my $self = shift;
@@ -309,7 +313,7 @@ sub logwarn {
    # add 'at <file> line <line>' unless argument ends in "\n";
    my (undef, $file, $line) = caller(1);
    push @_, sprintf " at %s line %d.\n", $file, $line
-      if substr($_[-1], -1, 1) ne "\n";
+     if substr($_[-1], -1, 1) ne "\n";
 
    # go for it!
    CORE::warn(@_) if $LOGDIE_MESSAGE_ON_STDERR;
@@ -325,7 +329,7 @@ sub logdie {
    # add 'at <file> line <line>' unless argument ends in "\n";
    my (undef, $file, $line) = caller(1);
    push @_, sprintf " at %s line %d.\n", $file, $line
-      if substr($_[-1], -1, 1) ne "\n";
+     if substr($_[-1], -1, 1) ne "\n";
 
    # go for it!
    CORE::die(@_) if $LOGDIE_MESSAGE_ON_STDERR;
@@ -343,7 +347,7 @@ sub logcarp {
    my $self = shift;
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   if ($self->is_warn()) { # avoid unless we're allowed to emit
+   if ($self->is_warn()) {    # avoid unless we're allowed to emit
       my $message = Carp::shortmess(@_);
       $self->warn($_) for split m{\n}mxs, $message;
    }
@@ -358,7 +362,7 @@ sub logcluck {
    my $self = shift;
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   if ($self->is_warn()) { # avoid unless we're allowed to emit
+   if ($self->is_warn()) {    # avoid unless we're allowed to emit
       my $message = Carp::longmess(@_);
       $self->warn($_) for split m{\n}mxs, $message;
    }
@@ -373,7 +377,7 @@ sub logcroak {
    my $self = shift;
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   if ($self->is_fatal()) { # avoid unless we're allowed to emit
+   if ($self->is_fatal()) {    # avoid unless we're allowed to emit
       my $message = Carp::shortmess(@_);
       $self->fatal($_) for split m{\n}mxs, $message;
    }
@@ -388,7 +392,7 @@ sub logconfess {
    my $self = shift;
    require Carp;
    $Carp::Internal{$_} = 1 for __PACKAGE__;
-   if ($self->is_fatal()) { # avoid unless we're allowed to emit
+   if ($self->is_fatal()) {    # avoid unless we're allowed to emit
       my $message = Carp::longmess(@_);
       $self->fatal($_) for split m{\n}mxs, $message;
    }
@@ -429,10 +433,10 @@ BEGIN {
    eval {
       require Time::HiRes;
       $has_time_hires = 1;
-      $gtod = \&Time::HiRes::gettimeofday;
+      $gtod           = \&Time::HiRes::gettimeofday;
    };
 
-   my $start_time = [ $gtod->() ];
+   my $start_time = [$gtod->()];
 
    # For supporting %R
    my $last_log = $start_time;
@@ -464,7 +468,7 @@ BEGIN {
                return '*undef*' unless defined $package;
                last if $package ne $internal_package;
                ++$i;
-            }
+            } ## end while ($i <= 4)
             return '*undef' if $i > 4;
             ($package) = caller($i += $caller_depth) if $caller_depth;
             return $package;
@@ -481,11 +485,11 @@ BEGIN {
             my ($data, $op, $options) = @_;
             $options = '{}' unless defined $options;
             $options = substr $options, 1, length($options) - 2;
-            my %flag_for = map {$_ => 1} split /\s*,\s*/, lc($options);
+            my %flag_for = map { $_ => 1 } split /\s*,\s*/, lc($options);
             my ($s, $u) = @{$data->{tod} ||= [$gtod->()]};
-            $u = substr "000000$u", -6, 6; # padding left with 0
+            $u = substr "000000$u", -6, 6;    # padding left with 0
             return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u+0000", gmtime $s)
-               if $flag_for{utc};
+              if $flag_for{utc};
 
             my @localtime = localtime $s;
             return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u%z", @localtime)
@@ -505,7 +509,7 @@ BEGIN {
       e => [
          s => sub {
             my ($data, $op, $options) = @_;
-            $data->{tod} ||= [$gtod->()]; # guarantee consistency here
+            $data->{tod} ||= [$gtod->()];     # guarantee consistency here
             my $local = $data->{loglocal} or return '';
             my $key = substr $options, 1, length($options) - 2;
             return '' unless exists $local->{$key};
@@ -527,7 +531,7 @@ BEGIN {
                return '*undef*' unless defined $package;
                last if $package ne $internal_package;
                ++$i;
-            }
+            } ## end while ($i <= 4)
             return '*undef' if $i > 4;
             (undef, $file) = caller($i += $caller_depth) if $caller_depth;
             return $file;
@@ -549,10 +553,10 @@ BEGIN {
                return '*undef*' unless defined $package;
                last if $package ne $internal_package;
                ++$i;
-            }
+            } ## end while ($i <= 4)
             return '*undef' if $i > 4;
             (undef, $filename, $line) = caller($i += $caller_depth)
-               if $caller_depth;
+              if $caller_depth;
             my (undef, undef, undef, $subroutine) = caller($i + 1);
             $subroutine = "main::" unless defined $subroutine;
             return sprintf '%s %s (%d)', $subroutine, $filename, $line;
@@ -568,10 +572,10 @@ BEGIN {
                return -1 unless defined $package;
                last if $package ne $internal_package;
                ++$i;
-            }
+            } ## end while ($i <= 4)
             return -1 if $i > 4;
             (undef, undef, $line) = caller($i += $caller_depth)
-               if $caller_depth;
+              if $caller_depth;
             return $line;
          },
       ],
@@ -592,7 +596,7 @@ BEGIN {
                return '*undef*' unless defined $package;
                last if $package ne $internal_package;
                ++$i;
-            }
+            } ## end while ($i <= 4)
             return '*undef' if $i > 4;
             $i += $caller_depth if $caller_depth;
             my (undef, undef, undef, $subroutine) = caller($i + 1);
@@ -618,7 +622,7 @@ BEGIN {
             my $s = $sx - $last_log->[0];
             my $m = int(($ux - $last_log->[1]) / 1000);
             ($s, $m) = ($s - 1, $m + 1000) if $m < 0;
-            $last_log = [ $sx, $ux ];
+            $last_log = [$sx, $ux];
             return $m + 1000 * $s;
          },
       ],
@@ -631,7 +635,7 @@ BEGIN {
                return '*undef*' unless defined $package;
                last if $package ne $internal_package;
                ++$level;
-            }
+            } ## end while ($level <= 4)
             return '*undef' if $level > 4;
 
             # usage of Carp::longmess() and substitutions is mostly copied
@@ -677,7 +681,7 @@ BEGIN {
       *{__PACKAGE__ . '::' . $name} = sub {
          $_instance->can(lc $name)->($_instance, @_);
       };
-   } ## end for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE...
+   } ## end for my $name (qw( FATAL ERROR WARN INFO DEBUG TRACE...))
 
    for my $accessor (qw( fh logexit_code )) {
       *{__PACKAGE__ . '::' . $accessor} = sub {
