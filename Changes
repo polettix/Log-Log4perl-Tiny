@@ -1,4 +1,6 @@
 {{$NEXT}}
+   - added caller_depth()
+   - fixed how caller() is used in different sprintf-like expanders
 
 1.3.0     2016-05-28 00:10:42+02:00 Europe/Rome (TRIAL RELEASE)
    - extended way for defining sprintf-like sequences in format()
