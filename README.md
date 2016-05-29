@@ -803,7 +803,11 @@ Additionally, you have the following accessors:
 
 # DEPENDENCIES
 
-None.
+Runs on perl 5.8.0 on with no additional runtime requirements.
+
+See `cpanfile` for additional requirements when testing and/or developing. In
+particular, developing will require Log::Log4perl to perform a comparison
+between the expansions of a few items related to `caller()`.
 
 # BUGS AND LIMITATIONS
 

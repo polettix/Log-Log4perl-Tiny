@@ -933,7 +933,11 @@ If you pass a value too, it will be set:
 
 =head1 DEPENDENCIES
 
-None.
+Runs on perl 5.8.0 on with no additional runtime requirements.
+
+See F<cpanfile> for additional requirements when testing and/or developing. In
+particular, developing will require Log::Log4perl to perform a comparison
+between the expansions of a few items related to C<caller()>.
 
 =head1 BUGS AND LIMITATIONS
 
