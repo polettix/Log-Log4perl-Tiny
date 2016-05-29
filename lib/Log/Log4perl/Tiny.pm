@@ -437,6 +437,13 @@ BEGIN {
    # For supporting %R
    my $last_log = $start_time;
 
+   # Timezones are... differently supported somewhere
+   my $strftime_has_tz_offset =
+      POSIX::strftime('%z', localtime()) =~ m<\A [-+] \d{4} \z>mxs;
+   if (! $strftime_has_tz_offset) {
+      require Time::Local;
+   }
+
    # %format_for idea from Log::Tiny by J. M. Adler
    %format_for = (    # specifiers according to Log::Log4perl
       c => [s => sub { 'main' }],
@@ -467,7 +474,19 @@ BEGIN {
             $u = substr "000000$u", -6, 6; # padding left with 0
             return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u+0000", gmtime $s)
                if $flag_for{utc};
-            return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u%z", localtime $s)
+
+            my @localtime = localtime $s;
+            return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u%z", @localtime)
+               if $strftime_has_tz_offset;
+
+            my $sign = '+';
+            my $offset = Time::Local::timegm(@localtime) - $s;
+            ($sign, $offset) = ('-', -$offset) if $offset < 0;
+            my $z = sprintf '%s%02d%02d',
+              $sign,                    # sign
+              int($offset / 3600),      # hours
+              (int($offset / 60) % 60); # minutes
+            return POSIX::strftime("%Y-%m-%d %H:%M:%S.$u$z", @localtime);
          },
          'optional'
       ],
