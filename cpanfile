@@ -7,4 +7,5 @@ on test => sub {
 on develop => sub {
    requires 'Test::Pod',           '1.14';
    requires 'Test::Pod::Coverage', '1.04';
+   requires 'Log::Log4perl',       '1.47';
 };
