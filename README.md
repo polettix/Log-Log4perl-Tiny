@@ -6,8 +6,10 @@ Log::Log4perl::Tiny - mimic Log::Log4perl in one single module
 
 This document describes Log::Log4perl::Tiny version {{\[ version \]}}.
 
-
 [![Build Status](https://travis-ci.org/polettix/Log-Log4perl-Tiny.svg?branch=master)](https://travis-ci.org/polettix/Log-Log4perl-Tiny)
+![Perl Version](https://img.shields.io/badge/perl-5.8+-brightgreen.svg)
+[![Current CPAN version](https://badge.fury.io/pl/Log-Log4perl-Tiny.svg)](https://badge.fury.io/pl/Log-Log4perl-Tiny)
+[![Kwalitee](http://cpants.cpanauthors.org/dist/Log-Log4perl-Tiny.png)](http://cpants.cpanauthors.org/dist/Log-Log4perl-Tiny)
 
 # SYNOPSIS
 
