@@ -4,6 +4,7 @@
    - added author test for verifying alignment with Log::Log4perl
    - aligned expansion of %T to Log::Log4perl implementation using
      Carp::longmess()
+   - worked around issue on timezone expansion in Windows
 
 1.3.0     2016-05-28 00:10:42+02:00 Europe/Rome (TRIAL RELEASE)
    - extended way for defining sprintf-like sequences in format()
