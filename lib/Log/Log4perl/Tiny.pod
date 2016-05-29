@@ -440,7 +440,7 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
     %F File where the logging event occurred
     %H Hostname
     %l Fully qualified name of the calling method followed by the
-       callers source the file name and line number between 
+       callers source the file name and line number between
        parentheses.
     %L Line number within the file where the log statement was issued
     %m The message to be logged
@@ -448,7 +448,7 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
     %n Newline (OS-independent)
     %p Priority of the logging event
     %P pid of the current process
-    %r Number of milliseconds elapsed from program start to logging 
+    %r Number of milliseconds elapsed from program start to logging
        event
     %R Number of milliseconds elapsed from last logging event including
        a %R to current logging event
@@ -540,7 +540,7 @@ See
 L<Log::Log4perl/Using Log::Log4perl with wrapper functions and classes>
 for further information.
 
-=head1 INTERFACE 
+=head1 INTERFACE
 
 You have two interfaces at your disposal, the functional one (with all
 the stealth logger functions) and the object-oriented one (with
