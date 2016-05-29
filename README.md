@@ -6,6 +6,9 @@ Log::Log4perl::Tiny - mimic Log::Log4perl in one single module
 
 This document describes Log::Log4perl::Tiny version {{\[ version \]}}.
 
+
+[![Build Status](https://travis-ci.org/polettix/Log-Log4perl-Tiny.svg?branch=master)](https://travis-ci.org/polettix/Log-Log4perl-Tiny)
+
 # SYNOPSIS
 
     use Log::Log4perl::Tiny qw( :easy );
