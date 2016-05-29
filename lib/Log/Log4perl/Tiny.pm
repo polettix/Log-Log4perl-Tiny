@@ -1,9 +1,9 @@
 package Log::Log4perl::Tiny;
 
-# ABSTRACT: mimic Log::Log4perl in one single module
-
-use warnings;
 use strict;
+use warnings;
+{ our $VERSION = '1.3.0'; }
+
 use Carp;
 use POSIX ();
 
