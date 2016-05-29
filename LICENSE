@@ -1,22 +1,9 @@
-__NAME__
-The Artistic License 2.0
-__NOTICE__
-Copyright (C) 2010-2016 by Flavio Poletti <polettix@cpan.org>.
+This software is Copyright (c) 2010-2016 by Flavio Poletti <polettix@cpan.org>.
 
-This module is free software.  You can redistribute it and/or
-modify it under the terms of the Artistic License 2.0.
+This is free software, licensed under:
 
-This program is distributed in the hope that it will be useful,
-but without any warranty; without even the implied warranty of
-merchantability or fitness for a particular purpose.
+  The Artistic License 2.0 (GPL Compatible)
 
-__URL__
-http://www.perlfoundation.org/artistic_license_2_0
-__META_NAME__
-artistic_2
-__META2_NAME__
-artistic_2
-__LICENSE__
 		       The Artistic License 2.0
 
 	    Copyright (c) 2000-2006, The Perl Foundation.
