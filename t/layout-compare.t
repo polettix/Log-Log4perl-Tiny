@@ -1,18 +1,20 @@
 #!perl -T
+use Test::More;
 
 BEGIN {
-   if (!$ENV{AUTHOR_TESTING}) {
-      require Test::More;
-      Test::More::plan(
-         skip_all => 'these tests are for testing by the author');
-   }
+   plan skip_all => 'these tests are for testing by the author'
+     unless $ENV{AUTHOR_TESTING};
+   plan skip_all => 'these tests are not run in continuous integration'
+     if $ENV{CONTINUOUS_INTEGRATION};
+
+   # else... let's just test!
+   plan tests => 6;
 } ## end BEGIN
 
-use Test::More tests => 6;
 use Symbol qw< gensym >;
 use IPC::Open3;
-use Path::Tiny;
 use Config;
+use Path::Tiny;
 
 # get some useful paths
 my $me         = path(__FILE__)->realpath();
