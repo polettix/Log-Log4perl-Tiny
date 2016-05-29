@@ -433,8 +433,9 @@ that are modeled (with simplifications) after L<Log::Log4perl>'s ones:
     %c Category of the logging event.
     %C Fully qualified package (or class) name of the caller
     %d Current date in yyyy/MM/dd hh:mm:ss format
-    %D Current date in 
+    %D Current date in strftime's "%Y-%m-%d %H:%M:%S.$u%z" (localtime)
     %{type}D Current date as strftime's "%Y-%m-%d %H:%M:%S.$u%z"
+       (type can be utc or local)
     %{key}e Evaluate or substitute (extension WRT Log::Log4perl)
     %F File where the logging event occurred
     %H Hostname
