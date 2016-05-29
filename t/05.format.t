@@ -60,9 +60,9 @@ my @tests = (
       '%T', ['whatever'],
       qr{(?mxs:
          \A
-            Log::Log4perl::Tiny .*?
-            ^TestLLT::log_like\(\)\ called\ 
-            at\ t[/\\]05\.format\.t\ line\ \d+
+            main::__ANON__ .*? called\ at\ t[/\\]TestLLT.*
+            ,\ TestLLT::log_like .*? called\ at\ t[/\\]05\.format\.t
+            \ line\ \d+
          )}
    ],
    ['%m%n', [qw( foo bar )], "foobar$/"],

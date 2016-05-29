@@ -39,9 +39,9 @@ my @tests = (
       '%T', ['whatever'],
       qr{(?mxs:
          \A
-            Log::Log4perl::Tiny .*?
-            ^TestLLT::log_like\(\)\ called\ 
-            at\ t[/\\]32\.caller_depth\.t\ line\ \d+
+            main::__ANON__ .*? called\ at\ t[/\\]TestLLT.*
+            ,\ TestLLT::log_like .*? called\ at\ t[/\\]32\.caller_depth\.t
+            \ line\ \d+
          )}
    ],
 
@@ -57,9 +57,8 @@ my @tests = (
       '%T', ['whatever'],
       qr{(?mxs:
          \A
-            main::__ANON__ .*?
-            ^TestLLT::log_like\(\)\ called\ 
-            at\ t[/\\]32\.caller_depth\.t\ line\ \d+
+            TestLLT::log_like\( .* called
+            \ at\ t[/\\]32\.caller_depth\.t\ line\ \d+
          )},
       1
    ],
