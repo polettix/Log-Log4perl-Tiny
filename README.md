@@ -371,13 +371,14 @@ that are modeled (with simplifications) after [Log::Log4perl](https://metacpan.o
     %c Category of the logging event.
     %C Fully qualified package (or class) name of the caller
     %d Current date in yyyy/MM/dd hh:mm:ss format
-    %D Current date in 
+    %D Current date in strftime's "%Y-%m-%d %H:%M:%S.$u%z" (localtime)
     %{type}D Current date as strftime's "%Y-%m-%d %H:%M:%S.$u%z"
+       (type can be utc or local)
     %{key}e Evaluate or substitute (extension WRT Log::Log4perl)
     %F File where the logging event occurred
     %H Hostname
     %l Fully qualified name of the calling method followed by the
-       callers source the file name and line number between 
+       callers source the file name and line number between
        parentheses.
     %L Line number within the file where the log statement was issued
     %m The message to be logged
@@ -385,7 +386,7 @@ that are modeled (with simplifications) after [Log::Log4perl](https://metacpan.o
     %n Newline (OS-independent)
     %p Priority of the logging event
     %P pid of the current process
-    %r Number of milliseconds elapsed from program start to logging 
+    %r Number of milliseconds elapsed from program start to logging
        event
     %R Number of milliseconds elapsed from last logging event including
        a %R to current logging event
@@ -472,7 +473,7 @@ See
 ["Using Log::Log4perl with wrapper functions and classes" in Log::Log4perl](https://metacpan.org/pod/Log::Log4perl#Using-Log::Log4perl-with-wrapper-functions-and-classes)
 for further information.
 
-# INTERFACE 
+# INTERFACE
 
 You have two interfaces at your disposal, the functional one (with all
 the stealth logger functions) and the object-oriented one (with
