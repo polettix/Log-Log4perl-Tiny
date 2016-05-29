@@ -11,6 +11,11 @@ MD=$(dirname "$ME")
 LOCAL_PERL5LIB="$MD:$MD/../lib:$MD/../local/lib/perl5"
 export PERL5LIB="$LOCAL_PERL5LIB:$PERL5LIB"
 
+if ! perl -MLog::Log4perl -e 0 >/dev/null 2>&1 ; then
+   echo "1..0 # Skipped: Log::Log4perl not installed"
+   exit 0
+fi
+
 module_path() {
    perldoc -l "$1" | sed -e 's/pod$/pm/'
 }
@@ -33,12 +38,6 @@ LLT=$(module_path Log::Log4perl::Tiny)
 echo '# comparing Log::Log4perl to Log::Log4perl::Tiny about caller()'
 echo "#   Log::Log4perl      -> $LL"
 echo "#   Log::Log4perl:Tiny -> $LLT"
-
-if ! perl -MLog::Log4perl -e 0 >/dev/null 2>&1 ; then
-   echo "1..0 # Skipped: Log::Log4perl not installed"
-   echo "you can install Log::Log4perl in $MD/local to do the test" >&2
-   exit 0
-fi
 
 count=0
 for expander in C F l L M T ; do
