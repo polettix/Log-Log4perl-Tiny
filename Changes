@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.3.1  2016-05-29 15:40:51 CEST
    - added caller_depth
    - fixed how caller() is used in different sprintf-like expanders
    - added author test for verifying alignment with Log::Log4perl
@@ -6,6 +8,8 @@
      Carp::longmess()
    - worked around issue on timezone expansion in Windows
    - moved to Milla as evolution from "plain" Dist::Zilla
+   - added badgest to documentation after Perl Monks hint by jandrew
+     (http://www.perlmonks.org/?node_id=1163390)
 
 1.3.0     2016-05-28 00:10:42+02:00 Europe/Rome (TRIAL RELEASE)
    - extended way for defining sprintf-like sequences in format()
