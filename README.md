@@ -469,8 +469,8 @@ different expansion times of the `%D` specifier).
 
 As of release 1.4.0, all expansion sequences that imply using `caller`
 (namely `%C`, `%F`, `%l`, `%L`, `%M`, and `%T`) will honor
-whatever you set for `Log::Log4perl::caller_depth` or
-`Log::Log4perl::Tiny::caller_depth` (they're aliased), defaulting to
+whatever you set for `$Log::Log4perl::caller_depth` or
+`$Log::Log4perl::Tiny::caller_depth` (they're aliased), defaulting to
 value `0`. You can basically increase this value by 1 for each wrapper
 function that you don't want to appear from the _real_ caller's point
 of view. In the following example, we have two nested wrappers, each of
@@ -489,8 +489,8 @@ which takes care to increase the value by 1 to be hidden:
        my_wrapper_logger(@_);
     }
 
-The _control_ variable is either [Log::Log4perl::Tiny::caller\_depth](https://metacpan.org/pod/Log::Log4perl::Tiny::caller_depth)
-or [Log::Log4perl::caller\_depth](https://metacpan.org/pod/Log::Log4perl::caller_depth), as a matter of fact they are aliased
+The _control_ variable is either `$Log::Log4perl::Tiny::caller_depth`
+or `$Log::Log4perl::caller_depth`, as a matter of fact they are aliased
 (i.e. changing either one will also change the other). This is
 intentional to let you switch towards [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) should you need
 to upgrade to it.
