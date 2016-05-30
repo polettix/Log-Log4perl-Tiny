@@ -28,8 +28,12 @@ This document describes Log::Log4perl::Tiny version {{[ version ]}}.
 <img alt="Kwalitee" src="http://cpants.cpanauthors.org/dist/Log-Log4perl-Tiny.png">
 </a>
 
-<a href="http://www.cpantesters.org/distro/L/Log-Log4perl-Tiny.html">
-<img alt="CPAN Testers" src="https://img.shields.io/badge/cpan-testers-lightgrey.svg">
+<a href="http://www.cpantesters.org/distro/L/Log-Log4perl-Tiny.html?distmat=1">
+<img alt="CPAN Testers" src="https://img.shields.io/badge/cpan-testers-blue.svg">
+</a>
+
+<a href="http://matrix.cpantesters.org/?dist=Log-Log4perl-Tiny">
+<img alt="CPAN Testers Matrix" src="https://img.shields.io/badge/matrix-@testers-blue.svg">
 </a>
 
 =end html
