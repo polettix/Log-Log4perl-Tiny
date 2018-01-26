@@ -10,3 +10,6 @@ install:
   - perl -v
 
 build: off
+
+test_script:
+  - prove -l --norc --rc=.proverc -r t/
