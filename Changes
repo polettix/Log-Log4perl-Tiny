@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.5.0  2022-03-20 16:22:29 CET
    - fix usage of __PACKAGE__ as a key inside a hash, useful for older
      perl-s.
 
