@@ -366,7 +366,7 @@ sub _carpstuff {
    my $emit_log = shift;
 
    require Carp;
-   local $Carp::Internal{__PACKAGE__()} = 1;
+   local $Carp::Internal{'' . __PACKAGE__} = 1;
 
    my @message;
    @message = __expand_message_list({message => \@_})

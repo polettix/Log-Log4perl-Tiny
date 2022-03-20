@@ -1,4 +1,6 @@
 {{$NEXT}}
+   - fix usage of __PACKAGE__ as a key inside a hash, useful for older
+     perl-s.
 
 1.4.1  2022-03-19 19:06:08 CET
    - credits here in Changes to jwittkoski for asking about caller_depth
