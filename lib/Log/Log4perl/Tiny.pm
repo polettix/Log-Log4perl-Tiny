@@ -2,7 +2,7 @@ package Log::Log4perl::Tiny;
 
 use strict;
 use warnings;
-{ our $VERSION = '1.6.0'; }
+{ our $VERSION = '1.6.1'; }
 
 use Carp;
 use POSIX ();
