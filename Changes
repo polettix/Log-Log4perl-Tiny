@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+1.6.4  2022-04-07 23:06:10 CEST
+   - Release after 234 PASSes on CPAN Testers (thanks!)
+
 1.6.3  2022-04-03 15:18:49 CEST
    - Address the second half of Issue/13...
 
