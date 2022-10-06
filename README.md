@@ -107,7 +107,7 @@ This document describes Log::Log4perl::Tiny version {{\[ version \]}}.
 
 Yes... yet another logging module. Nothing particularly fancy nor
 original, too, but a single-module implementation of the features I
-use most from [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) for quick things, namely:
+use most from [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) for quick things, namely:
 
 - easy mode and stealth loggers (aka log functions `INFO`, `WARN`, etc.);
 - debug message filtering by log level;
@@ -119,8 +119,8 @@ notable one is the ability to provide a configuration file.
 
 ## Why?
 
-I have really nothing against [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl), to the point that
-one of the import options is to check whether [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) is installed
+I have really nothing against [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl), to the point that
+one of the import options is to check whether [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) is installed
 and use it if possible. I just needed to crunch the plethora of
 modules down to a single-file module, so that I can embed it easily in
 scripts I use in machines where I want to reduce my impact as much as
@@ -128,7 +128,7 @@ possible.
 
 ## Log Levels
 
-[Log::Log4perl::Tiny](https://metacpan.org/pod/Log::Log4perl::Tiny) implements all _standard_ [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)'s
+[Log::Log4perl::Tiny](https://metacpan.org/pod/Log%3A%3ALog4perl%3A%3ATiny) implements all _standard_ [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)'s
 log levels, without the possibility to change them. The correspondent
 values are available in the following variables (in order of increasing
 severity or _importance_):
@@ -145,15 +145,15 @@ levels are defined as well:
 
 - `$OFF`
 
-    also in [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl), useful to turn off all logging except for `ALWAYS`
+    also in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl), useful to turn off all logging except for `ALWAYS`
 
 - `$DEAD`
 
-    not in [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl), when the threshold log level is set to this value
+    not in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl), when the threshold log level is set to this value
     every log is blocked (even when called from the `ALWAYS` stealth logger).
 
 You can import these variables using the `:levels` import facility,
-or you can use the directly from the [Log::Log4perl::Tiny](https://metacpan.org/pod/Log::Log4perl::Tiny) namespace.
+or you can use the directly from the [Log::Log4perl::Tiny](https://metacpan.org/pod/Log%3A%3ALog4perl%3A%3ATiny) namespace.
 They are imported automatically if the `:easy` import option is specified.
 
 ### Default Log Level
@@ -173,16 +173,16 @@ you will import all the functionalities associated to `:easy` but
 will silence the logger off _unless_ somewhere else the module
 is loaded (and imported) without this option. In this way:
 
-- if the user of your module does _not_ import [Log::Log4perl::Tiny](https://metacpan.org/pod/Log::Log4perl::Tiny),
+- if the user of your module does _not_ import [Log::Log4perl::Tiny](https://metacpan.org/pod/Log%3A%3ALog4perl%3A%3ATiny),
 all log messages will be dropped (thanks to the log level set to
 `$DEAD`)
-- otherwise, if the user imports [Log::Log4perl::Tiny](https://metacpan.org/pod/Log::Log4perl::Tiny) without the
+- otherwise, if the user imports [Log::Log4perl::Tiny](https://metacpan.org/pod/Log%3A%3ALog4perl%3A%3ATiny) without the
 option, the log level will be set to the default value (unless it
 has already been explicitly set somewhere else).
 
 ## Easy Mode Overview
 
-I love [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)'s easy mode because it lets you set up a
+I love [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)'s easy mode because it lets you set up a
 sophisticated logging infrastructure with just a few keystrokes:
 
     use Log::Log4perl qw( :easy );
@@ -209,11 +209,11 @@ If you want, you can replicate it with just a change in the first line:
     use Data::Dumper;
     DEBUG 'Some stuff in main package', sub { Dumper(\%main::) };
 
-Well... yes, I'm invading the [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) namespace in order to
+Well... yes, I'm invading the [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) namespace in order to
 reduce the needed changes as mush as possible. This is useful when I
-begin using [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) and then realise I want to make a single
+begin using [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) and then realise I want to make a single
 script with all modules embedded. There is also another reason why
-I put `easy_init()` in [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) namespace:
+I put `easy_init()` in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) namespace:
 
     use Log::Log4perl::Tiny qw( :full_or_fake :easy );
     Log::Log4perl->easy_init({
@@ -227,21 +227,21 @@ I put `easy_init()` in [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) n
     DEBUG 'Some stuff in main package', sub { Dumper(\%main::) };
 
 With import option `full_or_fake`, in fact, the module first tries to
-load [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) in the caller's namespace with the provided
+load [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) in the caller's namespace with the provided
 options (except `full_or_fake`, of course), returning immediately if
-it is successful; otherwise, it tries to "fake" [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) and
-installs its own logging functions. In this way, if [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)
+it is successful; otherwise, it tries to "fake" [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) and
+installs its own logging functions. In this way, if [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)
 is available it will be used, but you don't have to change anything
 if it isn't.
 
-Easy mode tries to mimic what [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) does, or at least
+Easy mode tries to mimic what [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) does, or at least
 the things that (from a purely subjective point of view) are most
 useful: `easy_init()` and _stealth loggers_.
 
 ## `easy_init()`
 
-[Log::Log4perl::Tiny](https://metacpan.org/pod/Log::Log4perl::Tiny) only supports three options from the big
-brother:
+[Log::Log4perl::Tiny](https://metacpan.org/pod/Log%3A%3ALog4perl%3A%3ATiny) only supports three options from the big
+brother, plus its own:
 
 - `level`
 
@@ -252,7 +252,7 @@ brother:
 - `file`
 
     a file name where to send the log lines. For compatibility with
-    [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl), a 2-arguments `open()` will be performed, which
+    [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl), a 2-arguments `open()` will be performed, which
     means you can easily set the opening mode, e.g. `>>filename`.
 
     Note that the 2-arguments `open()` is intrinsically insecure and will
@@ -270,6 +270,16 @@ brother:
     channels descriptions (see ["build\_channels"](#build_channels) for details).
 
     The default is to send logging messages to `STDERR`;
+
+- `filter`
+
+    (Not in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)) (As of 1.8.0)
+
+    a filter function to be applied onto every message before it is emitted.
+    This can be useful for multi-line log messages, when a specific
+    start-of-line is needed (e.g. a hash character).
+
+    By default nothing is done.
 
 - `layout`
 
@@ -306,7 +316,7 @@ They are named after the corresponding level:
 - `FATAL`
 
 Additionally, you get the following logger functions (again, these are
-in line with [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)):
+in line with [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)):
 
 - `ALWAYS`
 
@@ -344,22 +354,22 @@ in line with [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)):
 
 If you want to set the exit code for `LOGEXIT` above
 (and `LOGDIE` as well, in case `die()` does not exit by itself),
-you can go "the [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) way" and set
+you can go "the [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) way" and set
 `$Log::Log4perl::LOGEXIT_CODE`, or set a code with
 `logexit_code()` - but you have to wait to read something about the
 object-oriented interface before doing this!
 
 As indicated, functions ["LOGWARN"](#logwarn), ["LOGDIE"](#logdie), ["LOGCARP"](#logcarp),
-["LOGCLUCK"](#logcluck), ["LOGCROACK"](#logcroack), and ["LOGCONFESS"](#logconfess) (as well as their
+["LOGCLUCK"](#logcluck), ["LOGCROAK"](#logcroak), and ["LOGCONFESS"](#logconfess) (as well as their
 lowercase counterparts called as object methods) both emit the log
 message on the normal output channel for Log::Log4perl::Tiny and call
 the respective function. This might not be what you want in the default
 case where the output channel is standard error, because you will end up
 with duplicate error messages. You can avoid the call to the
 _canonical_ function setting import option `:no_extra_logdie_message`,
-in line with what [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) provides.
+in line with what [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) provides.
 
-There is also one additional stealth function that [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)
+There is also one additional stealth function that [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)
 misses but that I think is of the outmoste importance: `LOGLEVEL`, to
 set the log level threshold for printing. If you want to be 100%
 compatible with Log::Log4perl, anyway, you should rather do the following:
@@ -368,7 +378,7 @@ compatible with Log::Log4perl, anyway, you should rather do the following:
 
 This function does not get imported when you specify `:easy`, anyway,
 so you have to import it explicitly. This will help you remembering that
-you are deviating from [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl).
+you are deviating from [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl).
 
 ## Emitting Logs
 
@@ -392,7 +402,7 @@ then the others are interpreted as described above.
 
 The log line layout sets the contents of a log line. The layout is
 configured as a `printf`-like string, with placeholder identifiers
-that are modeled (with simplifications) after [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)'s ones:
+that are modeled (with simplifications) after [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)'s ones:
 
     %c Category of the logging event.
     %C Fully qualified package (or class) name of the caller
@@ -455,7 +465,7 @@ partially cover the missing items explained above, as of release 1.4.0:
 
     where `$data` is a reference to a hash that contains at least the
     `tod` key, associated to an array with the output of `gettimeofday`
-    (if [Time::HiRes](https://metacpan.org/pod/Time::HiRes) is available) or its equivalent (if [Time::HiRes](https://metacpan.org/pod/Time::HiRes) is
+    (if [Time::HiRes](https://metacpan.org/pod/Time%3A%3AHiRes) is available) or its equivalent (if [Time::HiRes](https://metacpan.org/pod/Time%3A%3AHiRes) is
     not available), `$op` is the letter `e` and `$options` is the string
     containing the `key` in braces (e.g. `{this-is-the-key}`).
 
@@ -492,11 +502,11 @@ which takes care to increase the value by 1 to be hidden:
 The _control_ variable is either `$Log::Log4perl::Tiny::caller_depth`
 or `$Log::Log4perl::caller_depth`, as a matter of fact they are aliased
 (i.e. changing either one will also change the other). This is
-intentional to let you switch towards [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) should you need
+intentional to let you switch towards [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) should you need
 to upgrade to it.
 
 See
-["Using Log::Log4perl with wrapper functions and classes" in Log::Log4perl](https://metacpan.org/pod/Log::Log4perl#Using-Log::Log4perl-with-wrapper-functions-and-classes)
+["Using Log::Log4perl with wrapper functions and classes" in Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl#Using-Log::Log4perl-with-wrapper-functions-and-classes)
 for further information.
 
 # INTERFACE
@@ -568,20 +578,27 @@ automatically when `:easy` is passed as import option except for
 
 - `LOGLEVEL`
 
-    (Not in [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)) (Not imported with `:easy`)
+    (Not in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)) (Not imported with `:easy`)
 
     set the minimum log level for sending a log message to the output;
 
 - `LOGLOCAL`
 
-    (Not in [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)) (Not imported with `:easy`) (As of 1.4.0)
+    (Not in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)) (Not imported with `:easy`) (As of 1.4.0)
 
     set a key-value pair useful for later expansion via code `%{key}e`. See
     ["loglocal"](#loglocal) below;
 
+- `FILTER`
+
+    (Not in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)) (Not imported with `:easy`) (As of 1.8.0)
+
+    set a filter function to apply to every expanded message before it is
+    printed. See ["filter"](#filter) below;
+
 - `build_channels`
 
-    (Not in [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)) (Not imported with `:easy`)
+    (Not in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)) (Not imported with `:easy`)
 
     build multiple channels for emitting logs.
 
@@ -681,11 +698,12 @@ so you can do the same with a logger object as well:
         See also ["build\_channels"](#build_channels) for additional information. This option takes
         precedence over `fh` described below.
 
+    - **filter**
     - **format**
     - **layout**
     - **level**
 
-        see [`easy_init()`](https://metacpan.org/pod/easy_init\(\)) and the methods below with the same
+        see [`easy_init()`](https://metacpan.org/pod/easy_init%28%29) and the methods below with the same
         name
 
     - **loglocal**
@@ -776,7 +794,7 @@ Additionally, you have the following accessors:
 
     get/set the output channel.
 
-    As an extention over [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl),
+    As an extention over [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl),
     you can also pass a reference to a subroutine or to an array.
 
     If you set a reference to a sub,
@@ -799,6 +817,34 @@ Additionally, you have the following accessors:
     through a proper subroutine reference of course).
 
     By default this parameter is set to be equal to `STDERR`.
+
+- `filter`
+
+    (Not in [Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl)) (As of 1.8.0)
+
+    get/set a filter CODE reference to be applied to every expanded message.
+    The filter function is passed the message as its only argument.
+
+    This can be e.g. useful in case a specific start-of-line character
+    sequence is needed for multi-line messages:
+
+        get_logger()->filter(sub {
+           my $message = shift;
+           $message =~ s{^}{# }gmxs; # pre-pend "# " to each line
+           return $message;
+        });
+
+    Another use case might be taming some sensitive data:
+
+        get_logger()->filter(sub {
+           my $message = shift;
+           $message =~ s{password<.*?>}{password<***>}gmxs;
+           return $message;
+        });
+
+    It is anyway suggested to deal with these cases explicitly at the source
+    and not as an afterthought (only). As an example, the regular expression
+    in the example above will leak parts of passwords that contain the `>` character, and there might be other ways passwords are written too.
 
 - `format`
 - `layout`
@@ -842,7 +888,7 @@ Please view/report any bugs or feature requests through Github at
 
 # SEE ALSO
 
-[Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) is one of the most useful modules I ever used, go check it!
+[Log::Log4perl](https://metacpan.org/pod/Log%3A%3ALog4perl) is one of the most useful modules I ever used, go check it!
 
 # AUTHOR
 
@@ -850,7 +896,7 @@ Flavio Poletti <polettix@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-Copyright (C) 2010-2016 by Flavio Poletti <polettix@cpan.org>.
+Copyright (C) 2010-2016, 2022 by Flavio Poletti <polettix@cpan.org>.
 
 This module is free software.  You can redistribute it and/or
 modify it under the terms of the Artistic License 2.0.
