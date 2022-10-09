@@ -1,4 +1,5 @@
 {{$NEXT}}
+   - Release, no tests on CPAN Testers available this time (sigh!)
 
 1.7.0  2022-10-06 08:09:39 CEST
    - Add new feature filter for massaging rendered messages.
